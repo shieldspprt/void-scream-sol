@@ -52,6 +52,13 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
+				// Yellex custom colors
+				'neon-green': 'hsl(var(--neon-green))',
+				'neon-pink': 'hsl(var(--neon-pink))',
+				'neon-cyan': 'hsl(var(--neon-cyan))',
+				'neon-purple': 'hsl(var(--neon-purple))',
+				'terminal-green': 'hsl(var(--terminal-green))',
+				'glitch-red': 'hsl(var(--glitch-red))',
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
@@ -62,6 +69,20 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				}
+			},
+			backgroundImage: {
+				'gradient-neon': 'var(--gradient-neon)',
+				'gradient-glitch': 'var(--gradient-glitch)',
+				'gradient-terminal': 'var(--gradient-terminal)',
+			},
+			boxShadow: {
+				'glow-neon': 'var(--glow-neon)',
+				'glow-pink': 'var(--glow-pink)',
+				'glow-cyan': 'var(--glow-cyan)',
+				'terminal': 'var(--shadow-terminal)',
+			},
+			fontFamily: {
+				'mono': ['JetBrains Mono', 'Courier New', 'monospace'],
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -84,11 +105,39 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'blink': {
+					'0%, 50%': { opacity: '1' },
+					'51%, 100%': { opacity: '0' }
+				},
+				'glitch-1': {
+					'0%': { transform: 'translateX(0)' },
+					'20%': { transform: 'translateX(-2px)' },
+					'40%': { transform: 'translateX(2px)' },
+					'60%': { transform: 'translateX(-2px)' },
+					'80%': { transform: 'translateX(2px)' },
+					'100%': { transform: 'translateX(0)' }
+				},
+				'glitch-2': {
+					'0%': { transform: 'translateX(0)' },
+					'20%': { transform: 'translateX(2px)' },
+					'40%': { transform: 'translateX(-2px)' },
+					'60%': { transform: 'translateX(2px)' },
+					'80%': { transform: 'translateX(-2px)' },
+					'100%': { transform: 'translateX(0)' }
+				},
+				'scan': {
+					'0%': { transform: 'translateY(-100%)' },
+					'100%': { transform: 'translateY(100vh)' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'blink': 'blink 1s infinite',
+				'glitch-1': 'glitch-1 0.5s infinite',
+				'glitch-2': 'glitch-2 0.5s infinite',
+				'scan': 'scan 0.1s linear infinite'
 			}
 		}
 	},

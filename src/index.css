@@ -2,41 +2,68 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
+/* Yellex DApp - Glitchy Neon Terminal Design System
+All colors MUST be HSL for dark terminal/cyberpunk aesthetic
 */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Terminal dark theme */
+    --background: 240 10% 3.9%;
+    --foreground: 120 100% 85%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    /* Glitchy card system */
+    --card: 240 10% 7%;
+    --card-foreground: 120 100% 85%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover: 240 10% 7%;
+    --popover-foreground: 120 100% 85%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Neon green primary (terminal green) */
+    --primary: 120 100% 50%;
+    --primary-foreground: 240 10% 3.9%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Pink/magenta secondary (glitch color) */
+    --secondary: 300 100% 50%;
+    --secondary-foreground: 240 10% 3.9%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    /* Muted terminal colors */
+    --muted: 240 10% 15%;
+    --muted-foreground: 120 50% 65%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    /* Neon cyan accent */
+    --accent: 180 100% 50%;
+    --accent-foreground: 240 10% 3.9%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    /* Red destructive (error/burn) */
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    /* Terminal borders and inputs */
+    --border: 120 100% 25%;
+    --input: 240 10% 15%;
+    --ring: 120 100% 50%;
 
-    --radius: 0.5rem;
+    --radius: 0.25rem;
+
+    /* Custom Yellex colors */
+    --neon-green: 120 100% 50%;
+    --neon-pink: 300 100% 60%;
+    --neon-cyan: 180 100% 50%;
+    --neon-purple: 270 100% 60%;
+    --terminal-green: 120 100% 40%;
+    --glitch-red: 0 100% 60%;
+    
+    /* Gradients */
+    --gradient-neon: linear-gradient(45deg, hsl(var(--neon-green)), hsl(var(--neon-cyan)));
+    --gradient-glitch: linear-gradient(90deg, hsl(var(--neon-pink)), hsl(var(--neon-purple)));
+    --gradient-terminal: linear-gradient(180deg, hsl(var(--background)), hsl(240 10% 8%));
+
+    /* Shadows and glows */
+    --glow-neon: 0 0 20px hsl(var(--neon-green) / 0.5);
+    --glow-pink: 0 0 20px hsl(var(--neon-pink) / 0.5);
+    --glow-cyan: 0 0 20px hsl(var(--neon-cyan) / 0.5);
+    --shadow-terminal: 0 4px 20px hsl(0 0% 0% / 0.8);
 
     --sidebar-background: 0 0% 98%;
 
@@ -54,44 +81,6 @@ All colors MUST be HSL.
 
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
 }
 
 @layer base {
@@ -100,6 +89,125 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-mono;
   }
+
+  /* Terminal cursor effect */
+  .cursor::after {
+    content: '_';
+    animation: blink 1s infinite;
+    color: hsl(var(--neon-green));
+  }
+
+  /* Glitch text effect */
+  .glitch {
+    position: relative;
+    color: hsl(var(--foreground));
+  }
+
+  .glitch::before,
+  .glitch::after {
+    content: attr(data-text);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .glitch::before {
+    animation: glitch-1 0.5s infinite;
+    color: hsl(var(--neon-pink));
+    z-index: -1;
+  }
+
+  .glitch::after {
+    animation: glitch-2 0.5s infinite;
+    color: hsl(var(--neon-cyan));
+    z-index: -2;
+  }
+
+  /* Neon glow effects */
+  .glow-neon {
+    box-shadow: var(--glow-neon);
+  }
+
+  .glow-pink {
+    box-shadow: var(--glow-pink);
+  }
+
+  .glow-cyan {
+    box-shadow: var(--glow-cyan);
+  }
+
+  /* Terminal scan lines */
+  .scanlines::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    background: linear-gradient(
+      transparent 50%,
+      rgba(0, 255, 0, 0.03) 50%
+    );
+    background-size: 100% 4px;
+    animation: scan 0.1s linear infinite;
+  }
+}
+
+@layer components {
+  .terminal-window {
+    @apply bg-card border border-primary/30 rounded shadow-terminal relative overflow-hidden;
+  }
+
+  .terminal-header {
+    @apply bg-muted px-4 py-2 border-b border-primary/30 flex items-center gap-2;
+  }
+
+  .terminal-dot {
+    @apply w-3 h-3 rounded-full;
+  }
+
+  .btn-yell {
+    @apply bg-gradient-to-r from-destructive via-secondary to-destructive text-destructive-foreground font-bold py-4 px-8 rounded-md transform transition-all duration-200 hover:scale-105 hover:glow-pink animate-pulse;
+  }
+
+  .btn-neon {
+    @apply bg-primary text-primary-foreground font-bold py-2 px-6 rounded border-2 border-primary transition-all duration-200 hover:bg-transparent hover:text-primary hover:glow-neon;
+  }
+
+  .btn-glitch {
+    @apply bg-secondary text-secondary-foreground font-bold py-2 px-6 rounded transition-all duration-200 hover:bg-transparent hover:text-secondary hover:glow-pink;
+  }
+}
+
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+@keyframes glitch-1 {
+  0% { transform: translateX(0); }
+  20% { transform: translateX(-2px); }
+  40% { transform: translateX(2px); }
+  60% { transform: translateX(-2px); }
+  80% { transform: translateX(2px); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes glitch-2 {
+  0% { transform: translateX(0); }
+  20% { transform: translateX(2px); }
+  40% { transform: translateX(-2px); }
+  60% { transform: translateX(2px); }
+  80% { transform: translateX(-2px); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes scan {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
 }
