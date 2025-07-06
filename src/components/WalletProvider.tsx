@@ -13,8 +13,8 @@ interface WalletProviderProps {
 }
 
 export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
-  // Use devnet for development, switch to mainnet-beta for production
-  const network = WalletAdapterNetwork.Devnet;
+  // Use mainnet-beta for production
+  const network = WalletAdapterNetwork.Mainnet;
   const endpoint = clusterApiUrl(network);
 
   const wallets = [

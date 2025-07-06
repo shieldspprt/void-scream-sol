@@ -238,17 +238,22 @@ export const YellForm = () => {
         </CardHeader>
         <CardContent className="space-y-8 p-8">
           {/* Ex Type Selector */}
-          <div className="space-y-4">
-            <label className="text-base font-mono text-neon-green font-bold">
+          <div className="space-y-4 animate-pulse-slow">
+            <label className="text-xl font-mono text-neon-green font-bold flex items-center gap-2">
               &gt; SELECT_EX_TYPE:
+              <span className="text-neon-pink text-sm">(Required)</span>
             </label>
             <Select value={exType} onValueChange={setExType}>
-              <SelectTrigger className="terminal-window font-mono h-12 text-base">
-                <SelectValue placeholder="What kind of disaster were they?" />
+              <SelectTrigger className="terminal-window font-mono h-14 text-lg border-2 border-neon-green shadow-glow-green hover:shadow-glow-green-lg transition-all duration-300">
+                <SelectValue placeholder="What kind of disaster were they? (Click to select)" />
               </SelectTrigger>
-              <SelectContent className="terminal-window border-primary/30">
+              <SelectContent className="terminal-window border-neon-green border-2 shadow-glow-green">
                 {EX_TYPES.map((type) => (
-                  <SelectItem key={type} value={type} className="font-mono hover:bg-primary/20 py-3">
+                  <SelectItem 
+                    key={type} 
+                    value={type} 
+                    className="font-mono hover:bg-neon-green/20 py-4 text-lg cursor-pointer transition-colors duration-200"
+                  >
                     {type}
                   </SelectItem>
                 ))}
@@ -257,7 +262,7 @@ export const YellForm = () => {
           </div>
 
           {/* Input Methods */}
-          <Tabs defaultValue="text" className="space-y-6">
+          <Tabs defaultValue="voice" className="space-y-6">
             <TabsList className="grid grid-cols-2 terminal-window h-14">
               <TabsTrigger value="text" className="font-mono text-base py-3">
                 📝 Text Rage
@@ -375,7 +380,7 @@ export const YellForm = () => {
             <Button
               onClick={() => submitYell('post')}
               disabled={isSubmitting || (!message.trim() && !audioBlob)}
-              className="bg-gradient-to-r from-accent via-secondary to-accent text-accent-foreground font-bold rounded-md transform transition-all duration-200 hover:scale-105 hover:shadow-glow-cyan h-20 text-xl flex flex-col gap-1"
+              className="bg-gradient-to-r from-accent via-secondary to-accent text-accent-foreground font-bold rounded-md transform transition-all duration-200 hover:scale-105 hover:shadow-glow-cyan h-20 text-xl flex flex-col gap-1 ring-2 ring-neon-cyan shadow-glow-cyan"
             >
               <div className="flex items-center">
                 <MessageSquare className="h-7 w-7 mr-3" />
