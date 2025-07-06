@@ -15,7 +15,8 @@ interface WalletProviderProps {
 export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
   // Use mainnet-beta for production
   const network = WalletAdapterNetwork.Mainnet;
-  const endpoint = clusterApiUrl(network);
+  // Use a public RPC endpoint URL explicitly to avoid access issues
+  const endpoint = "https://solana-api.projectserum.com";
 
   const wallets = [
     new PhantomWalletAdapter(),

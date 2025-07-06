@@ -368,22 +368,22 @@ export const YellForm = () => {
             <Button
               onClick={() => submitYell('burn')}
               disabled={isSubmitting || (!message.trim() && !audioBlob)}
-              className="btn-yell h-20 text-xl flex flex-col gap-1"
+              className="btn-yell h-20 text-xl flex flex-col gap-1 bg-gradient-to-r from-red-600 via-red-700 to-red-800 hover:from-red-700 hover:via-red-800 hover:to-red-900 shadow-lg shadow-red-600/50 transform transition-transform duration-300 hover:scale-105"
             >
               <div className="flex items-center">
-                <Flame className="h-7 w-7 mr-3" />
+                <Flame className="h-7 w-7 mr-3 text-yellow-300 animate-pulse" />
                 BURN FOREVER
               </div>
-              <div className="text-sm opacity-90">FREE</div>
+              <div className="text-sm opacity-90 text-yellow-200">FREE</div>
             </Button>
             
             <Button
               onClick={() => submitYell('post')}
               disabled={isSubmitting || (!message.trim() && !audioBlob)}
-              className="bg-gradient-to-r from-accent via-secondary to-accent text-accent-foreground font-bold rounded-md transform transition-all duration-200 hover:scale-105 hover:shadow-glow-cyan h-20 text-xl flex flex-col gap-1 ring-2 ring-neon-cyan shadow-glow-cyan"
+              className="bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 text-white font-bold rounded-md transform transition-transform duration-300 hover:scale-110 hover:shadow-lg hover:shadow-cyan-500/70 h-20 text-xl flex flex-col gap-1 ring-4 ring-cyan-400 shadow-lg shadow-cyan-400/50"
             >
               <div className="flex items-center">
-                <MessageSquare className="h-7 w-7 mr-3" />
+                <MessageSquare className="h-7 w-7 mr-3 animate-pulse text-white" />
                 POST TO WALL
               </div>
               <div className="text-sm opacity-90">0.01 SOL</div>
