@@ -3,7 +3,7 @@ import { WalletProvider } from './WalletProvider';
 import { WalletConnector } from './WalletConnector';
 import { YellForm } from './YellForm';
 import { WallOfScreams } from './WallOfScreams';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
 
 const YellexApp = () => {
   return (
@@ -31,25 +31,9 @@ const YellexApp = () => {
         </header>
 
         {/* Main Content */}
-        <main className="relative z-10 max-w-6xl mx-auto px-6 pb-24">
-          <Tabs defaultValue="yell" className="space-y-12">
-            <TabsList className="grid w-full grid-cols-2 terminal-window h-16">
-              <TabsTrigger value="yell" className="btn-neon text-lg py-4">
-                &gt; YELL NOW
-              </TabsTrigger>
-              <TabsTrigger value="wall" className="btn-glitch text-lg py-4">
-                &gt; WALL OF SCREAMS
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="yell">
-              <YellForm />
-            </TabsContent>
-
-            <TabsContent value="wall">
-              <WallOfScreams />
-            </TabsContent>
-          </Tabs>
+        <main className="relative z-10 max-w-6xl mx-auto px-6 pb-24 space-y-12">
+          <YellForm />
+          <WallOfScreams />
         </main>
 
         {/* Footer */}
@@ -59,7 +43,7 @@ const YellexApp = () => {
               powered by rage and blockchain
             </span>
             <span className="mx-2">|</span>
-            <span className="text-neon-cyan">0.01 SOL per scream</span>
+            <span className="text-neon-cyan">Burn: FREE | Post: 0.01 SOL</span>
           </div>
         </footer>
       </div>

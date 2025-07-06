@@ -3,59 +3,18 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Play, Pause, Volume2, Heart, MessageSquare } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Scream {
   id: string;
-  message: string;
-  exType: string;
-  timestamp: string;
-  hasAudio: boolean;
+  message: string | null;
+  ex_type: string | null;
+  created_at: string;
+  has_audio: boolean;
+  audio_data: string | null;
   likes: number;
 }
 
-// Mock data for the wall of screams
-const MOCK_SCREAMS: Scream[] = [
-  {
-    id: '1',
-    message: "You said you were 'building something revolutionary' but all you built was a tower of lies and broken promises! I hope your startup fails faster than your commitment to our relationship!",
-    exType: "💸 Crypto Bro",
-    timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 mins ago
-    hasAudio: false,
-    likes: 42
-  },
-  {
-    id: '2',
-    message: "[Voice Note] *incoherent screaming about gaslighting*",
-    exType: "🌪️ Gaslighter",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
-    hasAudio: true,
-    likes: 137
-  },
-  {
-    id: '3',
-    message: "DISAPPEARING FOR WEEKS WITHOUT EXPLANATION IS NOT 'MYSTERIOUS' IT'S JUST RUDE! I hope every notification you get is just spam forever!",
-    exType: "👻 Ghoster",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 6).toISOString(), // 6 hours ago
-    hasAudio: false,
-    likes: 89
-  },
-  {
-    id: '4',
-    message: "You were like a walking parade of red flags but I was colorblind to your toxicity! May your WiFi always be slow and your phone battery die at 1%!",
-    exType: "🤡 Red Flag Parade",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString(), // 12 hours ago
-    hasAudio: false,
-    likes: 203
-  },
-  {
-    id: '5',
-    message: "[Voice Note] *passionate rant about emotional manipulation*",
-    exType: "🧛 Energy Vampire",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
-    hasAudio: true,
-    likes: 156
-  }
-];
 
 const formatTimeAgo = (timestamp: string) => {
   const now = new Date();
@@ -69,26 +28,79 @@ const formatTimeAgo = (timestamp: string) => {
 };
 
 export const WallOfScreams = () => {
-  const [screams, setScreams] = useState<Scream[]>(MOCK_SCREAMS);
+  const [screams, setScreams] = useState<Scream[]>([]);
   const [playingAudio, setPlayingAudio] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const handleLike = (screamId: string) => {
-    setScreams(prev => prev.map(scream => 
-      scream.id === screamId 
-        ? { ...scream, likes: scream.likes + 1 }
-        : scream
-    ));
-  };
+  useEffect(() => {
+    fetchScreams();
+  }, []);
 
-  const playAudio = (screamId: string) => {
-    if (playingAudio === screamId) {
-      setPlayingAudio(null);
-    } else {
-      setPlayingAudio(screamId);
-      // Simulate audio playback
-      setTimeout(() => setPlayingAudio(null), 3000);
+  const fetchScreams = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('screams')
+        .select('*')
+        .eq('action', 'post')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setScreams(data || []);
+    } catch (error) {
+      console.error('Error fetching screams:', error);
+    } finally {
+      setLoading(false);
     }
   };
+
+  const handleLike = async (screamId: string) => {
+    try {
+      const scream = screams.find(s => s.id === screamId);
+      if (!scream) return;
+
+      const { error } = await supabase
+        .from('screams')
+        .update({ likes: scream.likes + 1 })
+        .eq('id', screamId);
+
+      if (error) throw error;
+
+      setScreams(prev => prev.map(scream => 
+        scream.id === screamId 
+          ? { ...scream, likes: scream.likes + 1 }
+          : scream
+      ));
+    } catch (error) {
+      console.error('Error updating likes:', error);
+    }
+  };
+
+  const playAudio = (screamId: string, audioData: string) => {
+    if (playingAudio === screamId) {
+      setPlayingAudio(null);
+      return;
+    }
+
+    try {
+      const audioBlob = new Blob([Uint8Array.from(atob(audioData), c => c.charCodeAt(0))], { type: 'audio/webm' });
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+      
+      setPlayingAudio(screamId);
+      audio.play();
+      audio.onended = () => {
+        setPlayingAudio(null);
+        URL.revokeObjectURL(audioUrl);
+      };
+    } catch (error) {
+      console.error('Error playing audio:', error);
+      setPlayingAudio(null);
+    }
+  };
+
+  if (loading) {
+    return <div className="text-center font-mono text-neon-green">Loading screams...</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -118,7 +130,14 @@ export const WallOfScreams = () => {
 
       {/* Screams Feed */}
       <div className="space-y-4">
-        {screams.map((scream, index) => (
+        {screams.length === 0 ? (
+          <Card className="terminal-window">
+            <CardContent className="p-8 text-center">
+              <p className="text-muted-foreground font-mono">No screams yet... be the first to unleash your rage!</p>
+            </CardContent>
+          </Card>
+        ) : (
+          screams.map((scream, index) => (
           <Card key={scream.id} className="terminal-window relative overflow-hidden">
             {/* Glitch effect overlay for some cards */}
             {index % 3 === 0 && (
@@ -131,24 +150,26 @@ export const WallOfScreams = () => {
               {/* Header */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="terminal-window text-neon-pink border-neon-pink font-mono">
-                    {scream.exType}
-                  </Badge>
+                  {scream.ex_type && (
+                    <Badge variant="outline" className="terminal-window text-neon-pink border-neon-pink font-mono">
+                      {scream.ex_type}
+                    </Badge>
+                  )}
                   <span className="text-xs text-muted-foreground font-mono">
-                    {formatTimeAgo(scream.timestamp)}
+                    {formatTimeAgo(scream.created_at)}
                   </span>
                 </div>
                 <div className="text-xs text-muted-foreground font-mono">
-                  anonymous_user_{scream.id.padStart(6, '0')}
+                  anonymous_user_{scream.id.slice(-6)}
                 </div>
               </div>
 
               {/* Content */}
               <div className="space-y-3">
-                {scream.hasAudio ? (
+                {scream.has_audio && scream.audio_data ? (
                   <div className="flex items-center gap-3 p-4 bg-muted/20 rounded border border-accent/30">
                     <Button
-                      onClick={() => playAudio(scream.id)}
+                      onClick={() => playAudio(scream.id, scream.audio_data!)}
                       size="sm"
                       className="btn-glitch"
                     >
@@ -175,15 +196,19 @@ export const WallOfScreams = () => {
                           />
                         </div>
                       </div>
-                      <p className="text-sm text-muted-foreground font-mono mt-1">
-                        {scream.message}
-                      </p>
+                      {scream.message && (
+                        <p className="text-sm text-muted-foreground font-mono mt-1">
+                          {scream.message}
+                        </p>
+                      )}
                     </div>
                   </div>
                 ) : (
-                  <blockquote className="border-l-4 border-primary pl-4 italic font-mono text-foreground">
-                    "{scream.message}"
-                  </blockquote>
+                  scream.message && (
+                    <blockquote className="border-l-4 border-primary pl-4 italic font-mono text-foreground">
+                      "{scream.message}"
+                    </blockquote>
+                  )
                 )}
               </div>
 
@@ -206,15 +231,18 @@ export const WallOfScreams = () => {
               </div>
             </CardContent>
           </Card>
-        ))}
+          ))
+        )}
       </div>
 
       {/* Load More */}
-      <div className="text-center">
-        <Button variant="outline" className="btn-neon font-mono">
-          &gt; load_more_screams()
-        </Button>
-      </div>
+      {screams.length > 0 && (
+        <div className="text-center">
+          <Button variant="outline" className="btn-neon font-mono" onClick={fetchScreams}>
+            &gt; refresh_screams()
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

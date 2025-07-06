@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
+import { Transaction, SystemProgram, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -8,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { Mic, Square, Play, Pause, Trash2, Flame, MessageSquare, Sparkles } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const EX_TYPES = [
   "💸 Crypto Bro",
@@ -104,7 +106,7 @@ export const YellForm = () => {
   };
 
   const submitYell = async (action: 'burn' | 'post') => {
-    if (!publicKey) {
+    if (!publicKey || !signTransaction) {
       toast({
         title: "❌ Wallet not connected",
         description: "Connect your Phantom wallet to unleash your rage!",
@@ -123,36 +125,79 @@ export const YellForm = () => {
     }
 
     setIsSubmitting(true);
+    let transactionSignature = null;
     
     try {
-      // Simulate payment processing (0.01 SOL)
-      toast({
-        title: "💸 Processing payment",
-        description: "Sending 0.01 SOL to the void...",
-      });
+      // For posting to wall, process payment
+      if (action === 'post') {
+        toast({
+          title: "💸 Processing payment",
+          description: "Sending 0.01 SOL to Yellex...",
+        });
 
-      // Simulate delay for blockchain transaction
-      await new Promise(resolve => setTimeout(resolve, 2000));
+        const recipientPubkey = new PublicKey('BMgz5grWtsgHsoPnrczXZdhDgT3wBSufNjyYU5jFyFrs');
+        const lamports = 0.01 * LAMPORTS_PER_SOL;
 
-      // Create mock NFT metadata
-      const nftMetadata = {
-        message: message || "[Voice Note]",
-        exType,
-        timestamp: new Date().toISOString(),
-        audioData: audioBlob ? "voice_note_data" : null,
-        action
-      };
+        const transaction = new Transaction().add(
+          SystemProgram.transfer({
+            fromPubkey: publicKey,
+            toPubkey: recipientPubkey,
+            lamports,
+          })
+        );
+
+        const { blockhash } = await connection.getLatestBlockhash();
+        transaction.recentBlockhash = blockhash;
+        transaction.feePayer = publicKey;
+
+        const signedTransaction = await signTransaction(transaction);
+        transactionSignature = await connection.sendRawTransaction(signedTransaction.serialize());
+        
+        toast({
+          title: "⏳ Confirming transaction",
+          description: "Waiting for blockchain confirmation...",
+        });
+
+        await connection.confirmTransaction(transactionSignature);
+      }
+
+      // Convert audio to base64 if present
+      let audioData = null;
+      if (audioBlob) {
+        const reader = new FileReader();
+        audioData = await new Promise((resolve) => {
+          reader.onloadend = () => resolve(reader.result?.toString().split(',')[1]);
+          reader.readAsDataURL(audioBlob);
+        });
+      }
+
+      // Save to database
+      const { error: dbError } = await supabase
+        .from('screams')
+        .insert({
+          message: message || null,
+          ex_type: exType || null,
+          has_audio: !!audioBlob,
+          audio_data: audioData,
+          action,
+          wallet_address: publicKey.toString(),
+          transaction_signature: transactionSignature
+        });
+
+      if (dbError) {
+        throw new Error('Failed to save to database');
+      }
 
       if (action === 'burn') {
         toast({
           title: "🔥 BURNED FOREVER!",
-          description: "Your scream has been sent to the Solana burn address. It's gone forever, just like your ex should be.",
+          description: "Your scream has been sent to the void. It's gone forever, just like your ex should be.",
           className: "border-destructive"
         });
       } else {
         toast({
           title: "📢 Posted to Wall of Screams!",
-          description: "Your anonymous rage is now public. Let the healing begin!",
+          description: "Your anonymous rage is now public and payment confirmed!",
           className: "border-neon-cyan"
         });
       }
@@ -162,10 +207,11 @@ export const YellForm = () => {
       setExType('');
       setAudioBlob(null);
       
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Transaction error:', error);
       toast({
         title: "❌ Transaction failed",
-        description: "Something went wrong. Your rage remains trapped!",
+        description: error.message || "Something went wrong. Your rage remains trapped!",
         variant: "destructive"
       });
     } finally {
@@ -323,7 +369,7 @@ export const YellForm = () => {
                 <Flame className="h-7 w-7 mr-3" />
                 BURN FOREVER
               </div>
-              <div className="text-sm opacity-90">0.01 SOL</div>
+              <div className="text-sm opacity-90">FREE</div>
             </Button>
             
             <Button
