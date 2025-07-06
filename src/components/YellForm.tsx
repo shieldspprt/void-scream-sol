@@ -146,8 +146,8 @@ export const YellForm = () => {
           })
         );
 
-        const { blockhash } = await connection.getLatestBlockhash();
-        transaction.recentBlockhash = blockhash;
+        const latestBlockhash = await connection.getLatestBlockhash('confirmed');
+        transaction.recentBlockhash = latestBlockhash.blockhash;
         transaction.feePayer = publicKey;
 
         const signedTransaction = await signTransaction(transaction);
@@ -158,7 +158,11 @@ export const YellForm = () => {
           description: "Waiting for blockchain confirmation...",
         });
 
-        await connection.confirmTransaction(transactionSignature);
+        await connection.confirmTransaction({
+          signature: transactionSignature,
+          blockhash: latestBlockhash.blockhash,
+          lastValidBlockHeight: latestBlockhash.lastValidBlockHeight
+        }, 'confirmed');
       }
 
       // Convert audio to base64 if present
