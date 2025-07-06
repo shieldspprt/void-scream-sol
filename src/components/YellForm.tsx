@@ -174,7 +174,7 @@ export const YellForm = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Terminal Header */}
       <Card className="terminal-window">
         <div className="terminal-header">
@@ -183,26 +183,26 @@ export const YellForm = () => {
           <div className="terminal-dot bg-primary"></div>
           <span className="text-sm font-mono ml-2">yellex_terminal_v1.0</span>
         </div>
-        <CardHeader>
-          <CardTitle className="text-2xl font-mono text-center">
+        <CardHeader className="pb-8">
+          <CardTitle className="text-3xl font-mono text-center py-4">
             <span className="glitch" data-text="PREPARE YOUR RAGE">
               PREPARE YOUR RAGE
             </span>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-8 p-8">
           {/* Ex Type Selector */}
-          <div className="space-y-2">
-            <label className="text-sm font-mono text-neon-green">
+          <div className="space-y-4">
+            <label className="text-base font-mono text-neon-green font-bold">
               &gt; SELECT_EX_TYPE:
             </label>
             <Select value={exType} onValueChange={setExType}>
-              <SelectTrigger className="terminal-window font-mono">
+              <SelectTrigger className="terminal-window font-mono h-12 text-base">
                 <SelectValue placeholder="What kind of disaster were they?" />
               </SelectTrigger>
               <SelectContent className="terminal-window border-primary/30">
                 {EX_TYPES.map((type) => (
-                  <SelectItem key={type} value={type} className="font-mono hover:bg-primary/20">
+                  <SelectItem key={type} value={type} className="font-mono hover:bg-primary/20 py-3">
                     {type}
                   </SelectItem>
                 ))}
@@ -211,27 +211,27 @@ export const YellForm = () => {
           </div>
 
           {/* Input Methods */}
-          <Tabs defaultValue="text" className="space-y-4">
-            <TabsList className="grid grid-cols-2 terminal-window">
-              <TabsTrigger value="text" className="font-mono">
+          <Tabs defaultValue="text" className="space-y-6">
+            <TabsList className="grid grid-cols-2 terminal-window h-14">
+              <TabsTrigger value="text" className="font-mono text-base py-3">
                 📝 Text Rage
               </TabsTrigger>
-              <TabsTrigger value="voice" className="font-mono">
+              <TabsTrigger value="voice" className="font-mono text-base py-3">
                 🎤 Voice Scream
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="text" className="space-y-4">
-              <div className="space-y-2">
+            <TabsContent value="text" className="space-y-6">
+              <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <label className="text-sm font-mono text-neon-green">
+                  <label className="text-base font-mono text-neon-green font-bold">
                     &gt; COMPOSE_SCREAM:
                   </label>
                   <Button
                     onClick={generateAiScream}
                     variant="outline"
-                    size="sm"
-                    className="btn-glitch"
+                    size="default"
+                    className="btn-glitch h-10"
                   >
                     <Sparkles className="h-4 w-4 mr-2" />
                     AI Generate
@@ -241,59 +241,59 @@ export const YellForm = () => {
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   placeholder="Let it all out... they'll never see this (unless you post it to the wall)"
-                  className="min-h-32 terminal-window font-mono text-foreground bg-input border-primary/30 focus:border-primary resize-none"
+                  className="min-h-40 terminal-window font-mono text-foreground bg-input border-primary/30 focus:border-primary resize-none text-base p-4"
                   maxLength={280}
                 />
-                <div className="text-right text-xs text-muted-foreground font-mono">
+                <div className="text-right text-sm text-muted-foreground font-mono">
                   {message.length}/280 characters
                 </div>
               </div>
             </TabsContent>
 
-            <TabsContent value="voice" className="space-y-4">
-              <div className="space-y-4">
-                <label className="text-sm font-mono text-neon-green">
+            <TabsContent value="voice" className="space-y-6">
+              <div className="space-y-6">
+                <label className="text-base font-mono text-neon-green font-bold">
                   &gt; RECORD_VOICE_SCREAM:
                 </label>
                 
-                <div className="flex items-center justify-center gap-4 p-8 terminal-window">
+                <div className="flex items-center justify-center gap-4 p-12 terminal-window">
                   {!isRecording ? (
                     <Button
                       onClick={startRecording}
                       size="lg"
-                      className="btn-neon"
+                      className="btn-neon h-16 px-8 text-lg"
                       disabled={isSubmitting}
                     >
-                      <Mic className="h-6 w-6 mr-2" />
+                      <Mic className="h-6 w-6 mr-3" />
                       Start Recording
                     </Button>
                   ) : (
                     <Button
                       onClick={stopRecording}
                       size="lg"
-                      className="btn-yell animate-pulse"
+                      className="btn-yell animate-pulse h-16 px-8 text-lg"
                     >
-                      <Square className="h-6 w-6 mr-2" />
+                      <Square className="h-6 w-6 mr-3" />
                       Stop Recording
                     </Button>
                   )}
                 </div>
 
                 {audioBlob && (
-                  <div className="flex items-center justify-center gap-4 p-4 terminal-window">
+                  <div className="flex items-center justify-center gap-4 p-6 terminal-window">
                     <Button
                       onClick={playAudio}
                       disabled={isPlaying}
-                      className="btn-glitch"
+                      className="btn-glitch h-12 px-6"
                     >
                       {isPlaying ? (
                         <>
-                          <Pause className="h-4 w-4 mr-2" />
+                          <Pause className="h-5 w-5 mr-2" />
                           Playing...
                         </>
                       ) : (
                         <>
-                          <Play className="h-4 w-4 mr-2" />
+                          <Play className="h-5 w-5 mr-2" />
                           Play Recording
                         </>
                       )}
@@ -301,10 +301,10 @@ export const YellForm = () => {
                     <Button
                       onClick={() => setAudioBlob(null)}
                       variant="outline"
-                      size="sm"
-                      className="btn-neon"
+                      size="default"
+                      className="btn-neon h-12 px-4"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="h-5 w-5" />
                     </Button>
                   </div>
                 )}
@@ -313,31 +313,35 @@ export const YellForm = () => {
           </Tabs>
 
           {/* Action Buttons */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-6 border-t border-primary/30">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-8 border-t border-primary/30">
             <Button
               onClick={() => submitYell('burn')}
               disabled={isSubmitting || (!message.trim() && !audioBlob)}
-              className="btn-yell h-16 text-lg"
+              className="btn-yell h-20 text-xl flex flex-col gap-1"
             >
-              <Flame className="h-6 w-6 mr-2" />
-              BURN FOREVER
-              <div className="text-xs opacity-80 ml-2">0.01 SOL</div>
+              <div className="flex items-center">
+                <Flame className="h-7 w-7 mr-3" />
+                BURN FOREVER
+              </div>
+              <div className="text-sm opacity-90">0.01 SOL</div>
             </Button>
             
             <Button
               onClick={() => submitYell('post')}
               disabled={isSubmitting || (!message.trim() && !audioBlob)}
-              className="bg-gradient-to-r from-accent via-secondary to-accent text-accent-foreground font-bold py-4 px-8 rounded-md transform transition-all duration-200 hover:scale-105 hover:shadow-glow-cyan h-16 text-lg"
+              className="bg-gradient-to-r from-accent via-secondary to-accent text-accent-foreground font-bold rounded-md transform transition-all duration-200 hover:scale-105 hover:shadow-glow-cyan h-20 text-xl flex flex-col gap-1"
             >
-              <MessageSquare className="h-6 w-6 mr-2" />
-              POST TO WALL
-              <div className="text-xs opacity-80 ml-2">0.01 SOL</div>
+              <div className="flex items-center">
+                <MessageSquare className="h-7 w-7 mr-3" />
+                POST TO WALL
+              </div>
+              <div className="text-sm opacity-90">0.01 SOL</div>
             </Button>
           </div>
 
           {exType && (
-            <div className="text-center">
-              <Badge variant="outline" className="terminal-window text-neon-pink border-neon-pink">
+            <div className="text-center pt-4">
+              <Badge variant="outline" className="terminal-window text-neon-pink border-neon-pink text-base py-2 px-4">
                 Targeting: {exType}
               </Badge>
             </div>

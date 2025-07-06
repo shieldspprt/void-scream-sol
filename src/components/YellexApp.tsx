@@ -31,13 +31,13 @@ const YellexApp = () => {
         </header>
 
         {/* Main Content */}
-        <main className="relative z-10 max-w-6xl mx-auto px-6 pb-12">
-          <Tabs defaultValue="yell" className="space-y-8">
-            <TabsList className="grid w-full grid-cols-2 terminal-window">
-              <TabsTrigger value="yell" className="btn-neon">
+        <main className="relative z-10 max-w-6xl mx-auto px-6 pb-24">
+          <Tabs defaultValue="yell" className="space-y-12">
+            <TabsList className="grid w-full grid-cols-2 terminal-window h-16">
+              <TabsTrigger value="yell" className="btn-neon text-lg py-4">
                 &gt; YELL NOW
               </TabsTrigger>
-              <TabsTrigger value="wall" className="btn-glitch">
+              <TabsTrigger value="wall" className="btn-glitch text-lg py-4">
                 &gt; WALL OF SCREAMS
               </TabsTrigger>
             </TabsList>
