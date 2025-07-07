@@ -146,12 +146,16 @@ export const YellForm = () => {
           })
         );
 
-        const latestBlockhash = await connection.getLatestBlockhash('confirmed');
+        const latestBlockhash = await connection.getLatestBlockhash('finalized');
         transaction.recentBlockhash = latestBlockhash.blockhash;
         transaction.feePayer = publicKey;
 
         const signedTransaction = await signTransaction(transaction);
-        transactionSignature = await connection.sendRawTransaction(signedTransaction.serialize());
+        transactionSignature = await connection.sendRawTransaction(signedTransaction.serialize(), {
+          skipPreflight: false,
+          preflightCommitment: 'confirmed',
+          maxRetries: 3
+        });
         
         toast({
           title: "⏳ Confirming transaction",
@@ -162,7 +166,7 @@ export const YellForm = () => {
           signature: transactionSignature,
           blockhash: latestBlockhash.blockhash,
           lastValidBlockHeight: latestBlockhash.lastValidBlockHeight
-        }, 'confirmed');
+        }, 'finalized');
       }
 
       // Convert audio to base64 if present

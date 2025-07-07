@@ -15,8 +15,8 @@ interface WalletProviderProps {
 export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
   // Use mainnet-beta for production
   const network = WalletAdapterNetwork.Mainnet;
-  // Use a public RPC endpoint URL explicitly to avoid access issues
-  const endpoint = "https://api.mainnet-beta.solana.com";
+  // Use Helius for better mainnet performance and reliability
+  const endpoint = "https://mainnet.helius-rpc.com/?api-key=d3b6cbd2-77a9-4a15-ab69-d0adceb8db21";
 
   const wallets = [
     new PhantomWalletAdapter(),
