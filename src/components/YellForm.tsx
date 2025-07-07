@@ -1,6 +1,4 @@
 import React, { useState, useRef } from 'react';
-import { useWallet, useConnection } from '@solana/wallet-adapter-react';
-import { Transaction, SystemProgram, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -9,47 +7,35 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { Mic, Square, Play, Pause, Trash2, Flame, MessageSquare, Sparkles } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-
-const EX_TYPES = [
-  "💸 Crypto Bro",
-  "🌪️ Gaslighter", 
-  "👻 Ghoster",
-  "🤡 Red Flag Parade",
-  "💔 Heartbreaker",
-  "🎭 Two-Face",
-  "🧛 Energy Vampire",
-  "🚩 Walking Red Flag",
-  "💀 Soul Crusher",
-  "🎪 Circus Act"
-];
-
-const AI_SCREAMS = [
-  "You absolute buffoon! Your existence is a glitch in the matrix of common sense!",
-  "I hope your WiFi disconnects every time you're about to save something important!",
-  "You're like a software update - nobody wants you and you make everything worse!",
-  "May all your crypto investments turn into rugpulls, you magnificent disaster!",
-  "You're the human equivalent of a 404 error - completely useless and impossible to find when needed!",
-  "I hope every meme you create dies in new and your NFTs become worthless JPEGs!"
-];
+import { useYellSubmission } from '@/hooks/useYellSubmission';
+import { EX_TYPES, AI_SCREAMS, MAX_MESSAGE_LENGTH, MAX_AUDIO_DURATION_MS } from '@/config/constants';
 
 export const YellForm = () => {
-  const { publicKey, signTransaction } = useWallet();
-  const { connection } = useConnection();
+  const { submitYell, isSubmitting } = useYellSubmission();
   const [message, setMessage] = useState('');
   const [exType, setExType] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [recordingStartTime, setRecordingStartTime] = useState<number | null>(null);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const recordingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          sampleRate: 44100
+        } 
+      });
+      
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: 'audio/webm;codecs=opus'
+      });
       mediaRecorderRef.current = mediaRecorder;
       
       const chunks: BlobPart[] = [];
@@ -58,18 +44,45 @@ export const YellForm = () => {
         const blob = new Blob(chunks, { type: 'audio/webm' });
         setAudioBlob(blob);
         stream.getTracks().forEach(track => track.stop());
+        setRecordingStartTime(null);
+        if (recordingTimeoutRef.current) {
+          clearTimeout(recordingTimeoutRef.current);
+          recordingTimeoutRef.current = null;
+        }
       };
       
       mediaRecorder.start();
       setIsRecording(true);
+      setRecordingStartTime(Date.now());
+      
+      // Auto-stop recording after maximum duration
+      recordingTimeoutRef.current = setTimeout(() => {
+        if (mediaRecorderRef.current && isRecording) {
+          stopRecording();
+          toast({
+            title: "⏰ Recording stopped",
+            description: "Maximum recording time reached (30 seconds).",
+          });
+        }
+      }, MAX_AUDIO_DURATION_MS);
+      
       toast({
         title: "🎤 Recording started",
         description: "Let it all out! Your voice will be heard.",
       });
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Recording error:', error);
+      let errorMsg = "Could not access microphone. Check permissions.";
+      
+      if (error.name === 'NotAllowedError') {
+        errorMsg = "Microphone access denied. Please allow microphone permissions.";
+      } else if (error.name === 'NotFoundError') {
+        errorMsg = "No microphone found. Please connect a microphone.";
+      }
+      
       toast({
         title: "❌ Microphone Error",
-        description: "Could not access microphone. Check permissions.",
+        description: errorMsg,
         variant: "destructive"
       });
     }
@@ -79,6 +92,12 @@ export const YellForm = () => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
+      
+      if (recordingTimeoutRef.current) {
+        clearTimeout(recordingTimeoutRef.current);
+        recordingTimeoutRef.current = null;
+      }
+      
       toast({
         title: "🛑 Recording stopped",
         description: "Your scream has been captured!",
@@ -88,11 +107,31 @@ export const YellForm = () => {
 
   const playAudio = () => {
     if (audioBlob) {
-      const url = URL.createObjectURL(audioBlob);
-      audioRef.current = new Audio(url);
-      audioRef.current.play();
-      setIsPlaying(true);
-      audioRef.current.onended = () => setIsPlaying(false);
+      try {
+        const url = URL.createObjectURL(audioBlob);
+        audioRef.current = new Audio(url);
+        audioRef.current.play();
+        setIsPlaying(true);
+        audioRef.current.onended = () => {
+          setIsPlaying(false);
+          URL.revokeObjectURL(url);
+        };
+        audioRef.current.onerror = () => {
+          setIsPlaying(false);
+          URL.revokeObjectURL(url);
+          toast({
+            title: "❌ Playback Error",
+            description: "Could not play audio recording.",
+            variant: "destructive"
+          });
+        };
+      } catch (error) {
+        toast({
+          title: "❌ Audio Error",
+          description: "Failed to load audio for playback.",
+          variant: "destructive"
+        });
+      }
     }
   };
 
@@ -105,125 +144,18 @@ export const YellForm = () => {
     });
   };
 
-  const submitYell = async (action: 'burn' | 'post') => {
-    if (!publicKey || !signTransaction) {
-      toast({
-        title: "❌ Wallet not connected",
-        description: "Connect your Phantom wallet to unleash your rage!",
-        variant: "destructive"
-      });
-      return;
-    }
+  const handleSubmitYell = async (action: 'burn' | 'post') => {
+    const result = await submitYell(action, {
+      message,
+      exType,
+      audioBlob
+    });
 
-    if (!message.trim() && !audioBlob) {
-      toast({
-        title: "❌ Empty scream",
-        description: "You need to write something or record audio first!",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsSubmitting(true);
-    let transactionSignature = null;
-    
-    try {
-      // For posting to wall, process payment
-      if (action === 'post') {
-        toast({
-          title: "💸 Processing payment",
-          description: "Sending 0.01 SOL to Yellex...",
-        });
-
-        const recipientPubkey = new PublicKey('BMgz5grWtsgHsoPnrczXZdhDgT3wBSufNjyYU5jFyFrs');
-        const lamports = 0.01 * LAMPORTS_PER_SOL;
-
-        const transaction = new Transaction().add(
-          SystemProgram.transfer({
-            fromPubkey: publicKey,
-            toPubkey: recipientPubkey,
-            lamports,
-          })
-        );
-
-        const latestBlockhash = await connection.getLatestBlockhash('finalized');
-        transaction.recentBlockhash = latestBlockhash.blockhash;
-        transaction.feePayer = publicKey;
-
-        const signedTransaction = await signTransaction(transaction);
-        transactionSignature = await connection.sendRawTransaction(signedTransaction.serialize(), {
-          skipPreflight: false,
-          preflightCommitment: 'confirmed',
-          maxRetries: 3
-        });
-        
-        toast({
-          title: "⏳ Confirming transaction",
-          description: "Waiting for blockchain confirmation...",
-        });
-
-        await connection.confirmTransaction({
-          signature: transactionSignature,
-          blockhash: latestBlockhash.blockhash,
-          lastValidBlockHeight: latestBlockhash.lastValidBlockHeight
-        }, 'finalized');
-      }
-
-      // Convert audio to base64 if present
-      let audioData = null;
-      if (audioBlob) {
-        const reader = new FileReader();
-        audioData = await new Promise((resolve) => {
-          reader.onloadend = () => resolve(reader.result?.toString().split(',')[1]);
-          reader.readAsDataURL(audioBlob);
-        });
-      }
-
-      // Save to database
-      const { error: dbError } = await supabase
-        .from('screams')
-        .insert({
-          message: message || null,
-          ex_type: exType || null,
-          has_audio: !!audioBlob,
-          audio_data: audioData,
-          action,
-          wallet_address: publicKey.toString(),
-          transaction_signature: transactionSignature
-        });
-
-      if (dbError) {
-        throw new Error('Failed to save to database');
-      }
-
-      if (action === 'burn') {
-        toast({
-          title: "🔥 BURNED FOREVER!",
-          description: "Your scream has been sent to the void. It's gone forever, just like your ex should be.",
-          className: "border-destructive"
-        });
-      } else {
-        toast({
-          title: "📢 Posted to Wall of Screams!",
-          description: "Your anonymous rage is now public and payment confirmed!",
-          className: "border-neon-cyan"
-        });
-      }
-
-      // Reset form
+    if (result.success) {
+      // Reset form on success
       setMessage('');
       setExType('');
       setAudioBlob(null);
-      
-    } catch (error: any) {
-      console.error('Transaction error:', error);
-      toast({
-        title: "❌ Transaction failed",
-        description: error.message || "Something went wrong. Your rage remains trapped!",
-        variant: "destructive"
-      });
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -301,10 +233,10 @@ export const YellForm = () => {
                   onChange={(e) => setMessage(e.target.value)}
                   placeholder="Let it all out... they'll never see this (unless you post it to the wall)"
                   className="min-h-40 terminal-window font-mono text-foreground bg-input border-primary/30 focus:border-primary resize-none text-base p-4"
-                  maxLength={280}
+                  maxLength={MAX_MESSAGE_LENGTH}
                 />
                 <div className="text-right text-sm text-muted-foreground font-mono">
-                  {message.length}/280 characters
+                  {message.length}/{MAX_MESSAGE_LENGTH} characters
                 </div>
               </div>
             </TabsContent>
@@ -374,25 +306,25 @@ export const YellForm = () => {
           {/* Action Buttons */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-8 border-t border-primary/30">
             <Button
-              onClick={() => submitYell('burn')}
-              disabled={isSubmitting || (!message.trim() && !audioBlob)}
+              onClick={() => handleSubmitYell('burn')}
+              disabled={isSubmitting || (!message.trim() && !audioBlob) || !exType}
               className="btn-yell h-20 text-xl flex flex-col gap-1 bg-gradient-to-r from-red-600 via-red-700 to-red-800 hover:from-red-700 hover:via-red-800 hover:to-red-900 shadow-lg shadow-red-600/50 transform transition-transform duration-300 hover:scale-105"
             >
               <div className="flex items-center">
                 <Flame className="h-7 w-7 mr-3 text-yellow-300 animate-pulse" />
-                BURN FOREVER
+                {isSubmitting ? 'BURNING...' : 'BURN FOREVER'}
               </div>
               <div className="text-sm opacity-90 text-yellow-200">FREE</div>
             </Button>
             
             <Button
-              onClick={() => submitYell('post')}
-              disabled={isSubmitting || (!message.trim() && !audioBlob)}
+              onClick={() => handleSubmitYell('post')}
+              disabled={isSubmitting || (!message.trim() && !audioBlob) || !exType}
               className="bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 text-white font-bold rounded-md transform transition-transform duration-300 hover:scale-110 hover:shadow-lg hover:shadow-cyan-500/70 h-20 text-xl flex flex-col gap-1 ring-4 ring-cyan-400 shadow-lg shadow-cyan-400/50"
             >
               <div className="flex items-center">
                 <MessageSquare className="h-7 w-7 mr-3 animate-pulse text-white" />
-                POST TO WALL
+                {isSubmitting ? 'POSTING...' : 'POST TO WALL'}
               </div>
               <div className="text-sm opacity-90">0.01 SOL</div>
             </Button>
