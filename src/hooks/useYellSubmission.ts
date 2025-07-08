@@ -193,13 +193,17 @@ export const useYellSubmission = () => {
       
       let errorMessage = "Something went wrong. Your rage remains trapped!";
       
-      // Provide specific error messages
-      if (error.message?.includes('insufficient funds')) {
-        errorMessage = "Insufficient SOL balance for transaction.";
+      // Provide specific error messages for common mainnet issues
+      if (error.message?.includes('403') || error.message?.includes('Access forbidden')) {
+        errorMessage = "Network temporarily unavailable. Please try again in a moment.";
+      } else if (error.message?.includes('insufficient funds') || error.message?.includes('Insufficient balance')) {
+        errorMessage = "Insufficient SOL balance for transaction fees.";
       } else if (error.message?.includes('User rejected')) {
         errorMessage = "Transaction was cancelled by user.";
       } else if (error.message?.includes('blockhash')) {
         errorMessage = "Network congestion. Please try again.";
+      } else if (error.message?.includes('Failed to check balance')) {
+        errorMessage = "Unable to verify wallet balance. Check your connection.";
       } else if (error.message) {
         errorMessage = error.message;
       }

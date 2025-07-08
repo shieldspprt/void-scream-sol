@@ -22,6 +22,11 @@ export const createConnection = (): Connection => {
   return new Connection(RPC_ENDPOINT, {
     commitment: 'confirmed',
     confirmTransactionInitialTimeout: TRANSACTION_TIMEOUT_MS,
+    wsEndpoint: undefined, // Disable websocket to avoid connection issues
+    disableRetryOnRateLimit: false,
+    httpHeaders: {
+      'Content-Type': 'application/json',
+    },
   });
 };
 
@@ -51,12 +56,17 @@ export const createPaymentTransaction = async (
     const recipientPubkey = new PublicKey(YELLEX_TREASURY_WALLET);
     const lamports = POST_PRICE_SOL * LAMPORTS_PER_SOL;
 
-    // Check wallet balance
-    const balance = await connection.getBalance(publicKey);
-    const requiredBalance = lamports + 5000; // Include fee estimation
+    // Check wallet balance with retry logic
+    const { balance: balanceResult, error: balanceError } = await getWalletBalance(publicKey, connection);
+    if (balanceError) {
+      throw new Error(`Failed to check balance: ${balanceError}`);
+    }
+    
+    const balance = balanceResult! * LAMPORTS_PER_SOL;
+    const requiredBalance = lamports + 10000; // Include fee estimation (10k lamports ~= 0.00001 SOL)
     
     if (balance < requiredBalance) {
-      throw new Error(`Insufficient balance. Required: ${requiredBalance / LAMPORTS_PER_SOL} SOL`);
+      throw new Error(`Insufficient balance. Required: ${requiredBalance / LAMPORTS_PER_SOL} SOL, Available: ${balance / LAMPORTS_PER_SOL} SOL`);
     }
 
     const transaction = new Transaction().add(
@@ -130,17 +140,30 @@ export const sendTransactionWithRetry = async (
   };
 };
 
-// Get wallet balance safely
+// Get wallet balance safely with retry logic
 export const getWalletBalance = async (
   publicKey: PublicKey,
   connection: Connection
 ): Promise<{ balance?: number; error?: string }> => {
-  try {
-    const balance = await connection.getBalance(publicKey);
-    return { balance: balance / LAMPORTS_PER_SOL };
-  } catch (error: any) {
-    return { error: error.message || 'Failed to get wallet balance' };
+  let lastError: Error | null = null;
+  
+  // Retry up to 3 times for balance check
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const balance = await connection.getBalance(publicKey, 'confirmed');
+      return { balance: balance / LAMPORTS_PER_SOL };
+    } catch (error: any) {
+      lastError = error;
+      console.warn(`Balance check attempt ${attempt} failed:`, error.message);
+      
+      // Wait before retry (exponential backoff)
+      if (attempt < 3) {
+        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+      }
+    }
   }
+  
+  return { error: lastError?.message || 'Failed to get wallet balance after multiple attempts' };
 };
 
 // Estimate transaction fee

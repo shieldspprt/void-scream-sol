@@ -4,9 +4,9 @@
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { clusterApiUrl } from '@solana/web3.js';
 
-// Network Configuration
+// Network Configuration - Using reliable free mainnet RPC
 export const NETWORK = WalletAdapterNetwork.Mainnet;
-export const RPC_ENDPOINT = clusterApiUrl('mainnet-beta'); // Free Solana mainnet RPC
+export const RPC_ENDPOINT = 'https://api.mainnet-beta.solana.com'; // Official Solana mainnet RPC
 
 // Payment Configuration
 export const YELLEX_TREASURY_WALLET = 'BMgz5grWtsgHsoPnrczXZdhDgT3wBSufNjyYU5jFyFrs';
