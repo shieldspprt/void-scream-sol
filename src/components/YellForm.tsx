@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { Mic, Square, Play, Pause, Trash2, Flame, MessageSquare, Sparkles } from 'lucide-react';
 import { useYellSubmission } from '@/hooks/useYellSubmission';
-import { EX_TYPES, AI_SCREAMS, MAX_MESSAGE_LENGTH, MAX_AUDIO_DURATION_MS } from '@/config/constants';
+import { YELL_TAGS, AI_SCREAMS, MAX_MESSAGE_LENGTH, MAX_AUDIO_DURATION_MS } from '@/config/constants';
 
 export const YellForm = () => {
   const { submitYell, isSubmitting } = useYellSubmission();
@@ -188,7 +188,7 @@ export const YellForm = () => {
                 <SelectValue placeholder="What kind of disaster were they? (Click to select)" />
               </SelectTrigger>
               <SelectContent className="terminal-window border-neon-green border-2 shadow-glow-green">
-                {EX_TYPES.map((type) => (
+                {YELL_TAGS.map((type) => (
                   <SelectItem 
                     key={type} 
                     value={type} 

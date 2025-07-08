@@ -182,6 +182,33 @@ All colors MUST be HSL for dark terminal/cyberpunk aesthetic
   .btn-glitch {
     @apply bg-secondary text-secondary-foreground font-bold py-2 px-6 rounded transition-all duration-200 hover:bg-transparent hover:text-secondary hover:glow-pink;
   }
+
+  /* Mobile responsive improvements */
+  @media (max-width: 768px) {
+    .terminal-window {
+      @apply mx-2;
+    }
+    
+    .terminal-header {
+      @apply px-3 py-2;
+    }
+  }
+}
+
+/* Enhanced animations */
+@keyframes scale-in {
+  0% {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-scale-in {
+  animation: scale-in 0.3s ease-out;
 }
 
 @keyframes blink {

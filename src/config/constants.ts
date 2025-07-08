@@ -22,26 +22,30 @@ export const MAX_RETRIES = 3;
 export const SOLANA_ADDRESS_LENGTH = 44;
 export const MIN_MESSAGE_LENGTH = 1;
 
-// Ex Types
-export const EX_TYPES = [
-  "💸 Crypto Bro",
-  "🌪️ Gaslighter", 
-  "👻 Ghoster",
-  "🤡 Red Flag Parade",
-  "💔 Heartbreaker",
-  "🎭 Two-Face",
-  "🧛 Energy Vampire",
-  "🚩 Walking Red Flag",
-  "💀 Soul Crusher",
-  "🎪 Circus Act"
+// Yell Tags (fun and expressive)
+export const YELL_TAGS = [
+  "#CryptoBro",
+  "#GhostQueen", 
+  "#Gaslighter",
+  "#RedFlagParade",
+  "#Heartbreaker",
+  "#TwoFace",
+  "#EnergyVampire",
+  "#WalkingRedFlag",
+  "#SoulCrusher",
+  "#CircusAct",
+  "#ToxicEx",
+  "#NFTBro"
 ] as const;
 
-// AI Generated Screams
+// AI Generated Screams (more emotional and web3-native)
 export const AI_SCREAMS = [
-  "You absolute buffoon! Your existence is a glitch in the matrix of common sense!",
-  "I hope your WiFi disconnects every time you're about to save something important!",
-  "You're like a software update - nobody wants you and you make everything worse!",
-  "May all your crypto investments turn into rugpulls, you magnificent disaster!",
-  "You're the human equivalent of a 404 error - completely useless and impossible to find when needed!",
-  "I hope every meme you create dies in new and your NFTs become worthless JPEGs!"
+  "You absolute degen! Your portfolio is as worthless as your personality! 💸",
+  "Hope your seed phrase gets rugpulled just like you rugpulled my heart! 💔",
+  "You're the human equivalent of a failed smart contract - buggy and unreliable! 🐛",
+  "May all your diamond hands turn to paper and your bags dump to zero! 📉",
+  "You're like a Twitter shill - all hype, no substance, pure disappointment! 🤡",
+  "I hope you mint worthless NFTs for eternity, you emotional vampire! 🧛‍♂️",
+  "Your love was a honeypot scam and I fell for it like a crypto noob! 🍯",
+  "You ghosted me harder than a failed blockchain transaction! 👻"
 ] as const;

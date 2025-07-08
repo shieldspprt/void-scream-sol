@@ -17,7 +17,7 @@ export const useYellSubmission = () => {
   const { connection } = useConnection();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const submitYell = async (action: 'burn' | 'post', data: YellSubmissionData) => {
+  const submitYell = async (action: 'burn' | 'post', data: YellSubmissionData): Promise<{ success: boolean; transactionSignature?: string }> => {
     if (!publicKey || !signTransaction) {
       toast({
         title: "❌ Wallet not connected",
@@ -186,7 +186,7 @@ export const useYellSubmission = () => {
         });
       }
 
-      return { success: true };
+      return { success: true, transactionSignature };
 
     } catch (error: any) {
       console.error('Submission error:', error);

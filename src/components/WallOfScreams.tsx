@@ -167,45 +167,47 @@ export const WallOfScreams = () => {
               {/* Content */}
               <div className="space-y-3">
                 {scream.has_audio && scream.audio_data ? (
-                  <div className="flex items-center gap-3 p-4 bg-muted/20 rounded border border-accent/30">
-                    <Button
-                      onClick={() => playAudio(scream.id, scream.audio_data!)}
-                      size="sm"
-                      className="btn-glitch"
-                    >
-                      {playingAudio === scream.id ? (
-                        <>
-                          <Pause className="h-4 w-4 mr-2" />
-                          Playing...
-                        </>
-                      ) : (
-                        <>
-                          <Play className="h-4 w-4 mr-2" />
-                          Play
-                        </>
-                      )}
-                    </Button>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <Volume2 className="h-4 w-4 text-neon-cyan" />
-                        <div className="h-2 bg-muted rounded-full flex-1 overflow-hidden">
-                          <div 
-                            className={`h-full bg-gradient-to-r from-neon-cyan to-neon-purple transition-all duration-300 ${
-                              playingAudio === scream.id ? 'w-full' : 'w-0'
-                            }`}
-                          />
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3 p-4 bg-muted/20 rounded border border-accent/30">
+                      <Button
+                        onClick={() => playAudio(scream.id, scream.audio_data!)}
+                        size="sm"
+                        className="btn-glitch"
+                      >
+                        {playingAudio === scream.id ? (
+                          <>
+                            <Pause className="h-4 w-4 mr-2" />
+                            Playing...
+                          </>
+                        ) : (
+                          <>
+                            <Play className="h-4 w-4 mr-2" />
+                            Play Audio
+                          </>
+                        )}
+                      </Button>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <Volume2 className="h-4 w-4 text-neon-cyan" />
+                          <div className="h-2 bg-muted rounded-full flex-1 overflow-hidden">
+                            <div 
+                              className={`h-full bg-gradient-to-r from-neon-cyan to-neon-purple transition-all duration-300 ${
+                                playingAudio === scream.id ? 'w-full' : 'w-0'
+                              }`}
+                            />
+                          </div>
                         </div>
                       </div>
-                      {scream.message && (
-                        <p className="text-sm text-muted-foreground font-mono mt-1">
-                          {scream.message}
-                        </p>
-                      )}
                     </div>
+                    {scream.message && (
+                      <blockquote className="border-l-4 border-primary pl-4 italic font-mono text-foreground bg-muted/10 p-3 rounded">
+                        "{scream.message}"
+                      </blockquote>
+                    )}
                   </div>
                 ) : (
                   scream.message && (
-                    <blockquote className="border-l-4 border-primary pl-4 italic font-mono text-foreground">
+                    <blockquote className="border-l-4 border-primary pl-4 italic font-mono text-foreground bg-muted/10 p-3 rounded leading-relaxed">
                       "{scream.message}"
                     </blockquote>
                   )
