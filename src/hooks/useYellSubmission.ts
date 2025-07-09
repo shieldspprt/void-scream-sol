@@ -5,7 +5,7 @@ import { VersionedTransaction } from '@solana/web3.js';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { validateMessage, validateExType, validateAudioBlob, sanitizeInput } from '@/utils/validation';
-import { validateTransaction, createPaymentTransaction, sendTransactionWithRetry } from '@/utils/solana';
+import { validateTransaction, createPaymentTransaction, sendTransactionWithRetry, createConnectionWithFallback } from '@/utils/solana';
 
 export interface YellSubmissionData {
   message: string;
@@ -82,21 +82,31 @@ export const useYellSubmission = () => {
     try {
       // Process payment for posting to wall
       if (action === 'post') {
-        // Validate transaction setup
-        const transactionValidation = validateTransaction(publicKey, signTransaction, connection);
-        if (!transactionValidation.isValid) {
-          throw new Error(transactionValidation.error);
-        }
-
         toast({
           title: "💸 Processing payment",
           description: "Creating transaction for 0.01 SOL...",
         });
 
+        // Try with RPC fallback for better reliability
+        let workingConnection = connection;
+        try {
+          // Test current connection first
+          await connection.getLatestBlockhash('confirmed');
+        } catch (error) {
+          console.warn('Current connection failed, trying fallback RPCs...');
+          workingConnection = await createConnectionWithFallback();
+        }
+
+        // Validate transaction setup
+        const transactionValidation = validateTransaction(publicKey, signTransaction, workingConnection);
+        if (!transactionValidation.isValid) {
+          throw new Error(transactionValidation.error);
+        }
+
         // Create payment transaction
         const { transaction, error: txError } = await createPaymentTransaction(
           publicKey,
-          connection
+          workingConnection
         );
 
         if (txError) {
@@ -114,7 +124,7 @@ export const useYellSubmission = () => {
         // Send with retry logic
         const { signature, error: sendError } = await sendTransactionWithRetry(
           signedTransaction,
-          connection
+          workingConnection
         );
 
         if (sendError) {

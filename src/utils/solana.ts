@@ -13,6 +13,7 @@ import {
 } from '@solana/web3.js';
 import { WalletContextState } from '@solana/wallet-adapter-react';
 import { 
+  RPC_ENDPOINTS,
   RPC_ENDPOINT, 
   YELLEX_TREASURY_WALLET, 
   POST_PRICE_SOL, 
@@ -20,9 +21,10 @@ import {
   MAX_RETRIES 
 } from '@/config/constants';
 
-// Create connection with optimized settings for mainnet
-export const createConnection = (): Connection => {
-  return new Connection(RPC_ENDPOINT, {
+// Create connection with RPC fallback logic for better reliability
+export const createConnection = (rpcEndpoint?: string): Connection => {
+  const endpoint = rpcEndpoint || RPC_ENDPOINT;
+  return new Connection(endpoint, {
     commitment: 'confirmed',
     confirmTransactionInitialTimeout: TRANSACTION_TIMEOUT_MS,
     wsEndpoint: undefined, // Disable websocket to avoid connection issues
@@ -31,6 +33,26 @@ export const createConnection = (): Connection => {
       'Content-Type': 'application/json',
     },
   });
+};
+
+// Create connection with automatic RPC fallback
+export const createConnectionWithFallback = async (): Promise<Connection> => {
+  for (const rpcEndpoint of RPC_ENDPOINTS) {
+    try {
+      const connection = createConnection(rpcEndpoint);
+      // Test the connection by getting latest blockhash
+      await connection.getLatestBlockhash('confirmed');
+      console.log(`Successfully connected to RPC: ${rpcEndpoint}`);
+      return connection;
+    } catch (error) {
+      console.warn(`RPC ${rpcEndpoint} failed, trying next...`, error);
+      continue;
+    }
+  }
+  
+  // If all RPCs fail, return default connection as fallback
+  console.warn('All RPC endpoints failed, using default connection');
+  return createConnection();
 };
 
 // Get current priority fee for better transaction success rate

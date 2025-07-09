@@ -4,9 +4,19 @@
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { clusterApiUrl } from '@solana/web3.js';
 
-// Network Configuration - Using reliable free mainnet RPC
+// Network Configuration - Multiple free mainnet RPCs for fallback
 export const NETWORK = WalletAdapterNetwork.Mainnet;
-export const RPC_ENDPOINT = 'https://api.mainnet-beta.solana.com'; // Official Solana mainnet RPC
+
+// Multiple free Solana mainnet RPC endpoints for better reliability
+export const RPC_ENDPOINTS = [
+  'https://api.mainnet-beta.solana.com', // Official Solana Labs
+  'https://solana-api.projectserum.com', // Serum
+  'https://rpc.ankr.com/solana', // Ankr
+  'https://solana-mainnet.rpc.extrnode.com', // Extrnode
+  'https://mainnet.helius-rpc.com/?api-key=', // Helius (free tier, no key needed for basic usage)
+] as const;
+
+export const RPC_ENDPOINT = RPC_ENDPOINTS[0]; // Default RPC
 
 // Payment Configuration
 export const YELLEX_TREASURY_WALLET = 'BMgz5grWtsgHsoPnrczXZdhDgT3wBSufNjyYU5jFyFrs';
