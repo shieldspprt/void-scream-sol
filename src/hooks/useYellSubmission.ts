@@ -1,6 +1,7 @@
 // Custom hook for handling yell submissions with proper error handling
 import { useState } from 'react';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
+import { VersionedTransaction } from '@solana/web3.js';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { validateMessage, validateExType, validateAudioBlob, sanitizeInput } from '@/utils/validation';
@@ -102,8 +103,8 @@ export const useYellSubmission = () => {
           throw new Error(txError);
         }
 
-        // Sign transaction
-        const signedTransaction = await signTransaction(transaction);
+        // Sign versioned transaction
+        const signedTransaction = await signTransaction(transaction) as VersionedTransaction;
 
         toast({
           title: "📡 Sending transaction",
