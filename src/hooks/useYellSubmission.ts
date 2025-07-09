@@ -80,6 +80,8 @@ export const useYellSubmission = () => {
     let transactionSignature = null;
 
     try {
+      console.log('🚀 Starting yell submission process...', { action, hasMessage: !!data.message, hasAudio: !!data.audioBlob });
+      
       // Process payment for posting to wall
       if (action === 'post') {
         toast({

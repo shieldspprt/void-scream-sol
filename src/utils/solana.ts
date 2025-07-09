@@ -96,10 +96,19 @@ export const createPaymentTransaction = async (
   connection: Connection
 ): Promise<{ transaction: VersionedTransaction; error?: string }> => {
   try {
+    console.log('💰 Creating payment transaction...', { wallet: publicKey.toString() });
+    
     const recipientPubkey = new PublicKey(YELLEX_TREASURY_WALLET);
     const lamports = POST_PRICE_SOL * LAMPORTS_PER_SOL;
 
+    console.log('💸 Transaction details:', { 
+      recipient: YELLEX_TREASURY_WALLET, 
+      amount: POST_PRICE_SOL, 
+      lamports 
+    });
+
     // Check wallet balance with retry logic
+    console.log('🔍 Checking wallet balance...');
     const { balance: balanceResult, error: balanceError } = await getWalletBalance(publicKey, connection);
     if (balanceError) {
       throw new Error(`Failed to check balance: ${balanceError}`);
@@ -170,6 +179,8 @@ export const sendTransactionWithRetry = async (
 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
+      console.log(`📡 Attempt ${attempt}: Sending transaction to network...`);
+      
       const signature = await connection.sendRawTransaction(
         signedTransaction.serialize(),
         {
@@ -178,6 +189,8 @@ export const sendTransactionWithRetry = async (
           maxRetries: 0, // Handle retries manually
         }
       );
+      
+      console.log('✅ Transaction sent successfully, signature:', signature);
 
       // Wait for confirmation with better timeout handling
       const latestBlockhash = await connection.getLatestBlockhash('confirmed');

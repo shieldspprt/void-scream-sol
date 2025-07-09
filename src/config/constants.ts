@@ -9,7 +9,7 @@ export const NETWORK = WalletAdapterNetwork.Mainnet;
 
 // Helius RPC Configuration (Primary)
 export const HELIUS_API_KEY = 'ed5f15e1-73d1-45a4-9d5c-e905104f37ec';
-export const HELIUS_RPC_ENDPOINT = `http://sg-sender.helius-rpc.com/fast?api-key=${HELIUS_API_KEY}`;
+export const HELIUS_RPC_ENDPOINT = `https://sg-sender.helius-rpc.com/fast?api-key=${HELIUS_API_KEY}`;
 
 // Multiple Solana mainnet RPC endpoints for better reliability (with Helius as primary)
 export const RPC_ENDPOINTS = [
