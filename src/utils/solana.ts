@@ -116,11 +116,33 @@ export const createPaymentTransaction = async (
     
     const balance = balanceResult! * LAMPORTS_PER_SOL;
     
-    // Get optimal priority fee for better transaction success
-    const priorityFee = await getPriorityFee(connection);
+    // Get dynamic priority fee from Helius API for optimal transaction success
+    let priorityFee = 30000; // Default fallback
+    try {
+      const response = await fetch(RPC_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 'priority-fee',
+          method: 'getPriorityFeeEstimate',
+          params: [{
+            accountKeys: [publicKey.toString(), recipientPubkey.toString()],
+            options: { priorityLevel: 'high' }
+          }]
+        })
+      });
+      const data = await response.json();
+      if (data.result?.priorityFeeEstimate) {
+        priorityFee = Math.min(Math.max(data.result.priorityFeeEstimate, 20000), 200000);
+        console.log('🚀 Dynamic priority fee from Helius:', priorityFee);
+      }
+    } catch (e) {
+      console.log('⚠️ Using fallback priority fee:', priorityFee);
+    }
     
     // More accurate fee estimation including priority fees
-    const requiredBalance = lamports + 15000 + priorityFee; // Base fee + priority fee buffer
+    const requiredBalance = lamports + 50000 + priorityFee; // Increased buffer for priority fees
     
     if (balance < requiredBalance) {
       throw new Error(`Insufficient balance. Required: ${requiredBalance / LAMPORTS_PER_SOL} SOL, Available: ${balance / LAMPORTS_PER_SOL} SOL`);
@@ -129,13 +151,13 @@ export const createPaymentTransaction = async (
     // Get recent blockhash with confirmed commitment for faster processing
     const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed');
 
-    // Create instructions with priority fee and compute limit
+    // Create instructions with optimized priority fee and compute limit
     const instructions = [
-      // Set compute unit limit (simple transfer needs ~300 CU, we set 1000 for safety)
+      // Set compute unit limit (simple transfer needs ~300 CU, we set 300000 for safety with complex operations)
       ComputeBudgetProgram.setComputeUnitLimit({
-        units: 1000,
+        units: 300000,
       }),
-      // Set priority fee in microlamports per compute unit
+      // Set priority fee in microlamports per compute unit (optimized for high success rate)
       ComputeBudgetProgram.setComputeUnitPrice({
         microLamports: priorityFee,
       }),
