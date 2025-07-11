@@ -1,73 +1,85 @@
-# Welcome to your Lovable project
+# 🧠 YELLEX — Scream at Your Ex, On-Chain
 
-## Project info
+Welcome to the most emotionally unstable DApp on Solana.
 
-**URL**: https://lovable.dev/projects/80021c18-8210-43a2-aa33-4318067b9859
+**Yellex** lets you scream (literally or in text) at your ex, boss, co-founder, ghost queen, crypto bro — **anonymously, permanently, and publicly** on a blockchain that never forgets.
 
-## How can I edit this code?
+Built with love, rage, and 0.01 SOL per scream.
 
-There are several ways of editing your application.
+> “Talk therapy is expensive.  
+> Blockchain screaming is 2 clicks and 0.01 SOL.” — Some guy in pain
 
-**Use Lovable**
+---
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/80021c18-8210-43a2-aa33-4318067b9859) and start prompting.
+## 🔥 What Is This?
 
-Changes made via Lovable will be committed automatically to this repo.
+Yellex is a chaotic Solana-powered emotional outlet.
 
-**Use your preferred IDE**
+- Record a voice note scream (default)  
+- Or write a petty breakup text  
+- Pay 0.01 SOL via Phantom  
+- Your scream gets posted to the **Wall of Screams**  
+- Anyone can listen, laugh, relate, or cry  
+- You can send the scream to your ex via X, Email, or WhatsApp  
+- All screams are **posted to Supabase**, not NFTs  
+- Voice or text — your trauma, your choice
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+---
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## 👻 Live Demo
 
-Follow these steps:
+[🗯️ www.yellex.fun](https://yellex.netlify.app)
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+---
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+## 🛠️ Built With
 
-# Step 3: Install the necessary dependencies.
-npm i
+- `React` — because chaos needs components
+- `Phantom Wallet` — to pay for your emotional release
+- `Helius API` — for smooth, modern Solana transactions w/ priority fees
+- `Supabase` — scream database in the cloud
+- `IPFS` — because why not store your voice rage forever?
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+---
 
-**Edit a file directly in GitHub**
+## 🧩 Features
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+- 🎤 Record or type your scream
+- 🧼 2-click scream posting flow
+- 🌑 Dark terminal-style UI — Web3 meets breakup
+- 🔥 “Post My Scream” button you can’t miss
+- 📤 Share to X, Email, or Copy Link
+- 🚩 Tag your ex: Crypto Bro, Ghost Queen, Gaslighter, etc.
 
-**Use GitHub Codespaces**
+---
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 🤬 Sample Screams
 
-## What technologies are used for this project?
+“I hope your coffee’s always lukewarm and your charger’s always missing.”
+“You left me on read — in real life.”
+“May your WiFi drop mid-Twitter thread.”
 
-This project is built with:
+⚠️ Warning
+This app is:
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+Emotionally unstable
 
-## How can I deploy this project?
+Not financial advice
 
-Simply open [Lovable](https://lovable.dev/projects/80021c18-8210-43a2-aa33-4318067b9859) and click on Share -> Publish.
+Therapeutic in weird ways
 
-## Can I connect a custom domain to my Lovable project?
+Fully public — do not confess crimes
 
-Yes, you can!
+💀 Why?
+Because not everything on-chain has to be DeFi, yield farming, or ponzinomics.
+Sometimes, it’s just about yelling into the void... with receipts.
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+🧼 Built By
+
+In a fit of emotional turbulence
+
+With 0 VC funding, 100% pettiness
+
+📜 License
+MIT — Meme It Thoroughly.
