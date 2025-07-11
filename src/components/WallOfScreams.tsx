@@ -133,7 +133,7 @@ export const WallOfScreams = () => {
   };
 
   if (loading) {
-    return <div className="text-center font-mono text-neon-green">Loading screams...</div>;
+    return <div className="text-center font-mono text-neon-green">Loading screams from the void...</div>;
   }
 
   return (
