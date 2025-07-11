@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Play, Pause, Volume2, Heart, MessageSquare, Share2, Copy, ExternalLink } from 'lucide-react';
+import { Play, Pause, Volume2, Heart, MessageSquare, Linkedin, Copy, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -291,7 +291,7 @@ export const WallOfScreams = () => {
                       className="font-mono hover:text-neon-purple hover:bg-neon-purple/10 px-2"
                       title="Share to X"
                     >
-                      <ExternalLink className="h-4 w-4" />
+                      <X className="h-4 w-4" />
                     </Button>
                     
                     <Button
@@ -301,7 +301,7 @@ export const WallOfScreams = () => {
                       className="font-mono hover:text-neon-green hover:bg-neon-green/10 px-2"
                       title="Share to LinkedIn"
                     >
-                      <Share2 className="h-4 w-4" />
+                      <Linkedin className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
