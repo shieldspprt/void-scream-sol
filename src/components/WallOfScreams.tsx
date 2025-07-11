@@ -16,6 +16,10 @@ interface Scream {
   likes: number;
 }
 
+interface WallOfScreamsProps {
+  refreshTrigger?: number;
+}
+
 
 const formatTimeAgo = (timestamp: string) => {
   const now = new Date();
@@ -28,7 +32,7 @@ const formatTimeAgo = (timestamp: string) => {
   return `${Math.floor(diffInSeconds / 86400)}d ago`;
 };
 
-export const WallOfScreams = () => {
+export const WallOfScreams = ({ refreshTrigger }: WallOfScreamsProps) => {
   const [screams, setScreams] = useState<Scream[]>([]);
   const [playingAudio, setPlayingAudio] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -36,7 +40,7 @@ export const WallOfScreams = () => {
 
   useEffect(() => {
     fetchScreams();
-  }, []);
+  }, [refreshTrigger]);
 
   const fetchScreams = async () => {
     try {
@@ -102,7 +106,7 @@ export const WallOfScreams = () => {
 
   const handleCopyLink = async (screamId: string) => {
     try {
-      const link = `${window.location.origin}?scream=${screamId}`;
+      const link = `${window.location.origin}/scream/${screamId}`;
       await navigator.clipboard.writeText(link);
       toast({
         title: "Link copied!",
@@ -120,14 +124,14 @@ export const WallOfScreams = () => {
 
   const handleShareToX = (scream: Scream) => {
     const text = scream.message || 'Check out this scream from YELLEX';
-    const url = `${window.location.origin}?scream=${scream.id}`;
+    const url = `${window.location.origin}/scream/${scream.id}`;
     const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
     window.open(twitterUrl, '_blank');
   };
 
   const handleShareToLinkedIn = (scream: Scream) => {
     const text = scream.message || 'Check out this scream from YELLEX';
-    const url = `${window.location.origin}?scream=${scream.id}`;
+    const url = `${window.location.origin}/scream/${scream.id}`;
     const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
     window.open(linkedInUrl, '_blank');
   };
@@ -167,8 +171,8 @@ export const WallOfScreams = () => {
               &gt; anonymous_rage_collection.exe
             </p>
             <div className="flex justify-center gap-4 text-xs font-mono">
-              <span className="text-neon-green">{screams.length} screams</span>
-              <span className="text-neon-cyan">{screams.reduce((sum, s) => sum + s.likes, 0)} likes</span>
+              <span className="text-neon-green animate-pulse">🗣 {screams.length} screams so far</span>
+              <span className="text-neon-cyan">💙 {screams.reduce((sum, s) => sum + s.likes, 0)} total likes</span>
             </div>
           </div>
         </CardHeader>

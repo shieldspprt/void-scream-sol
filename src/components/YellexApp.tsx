@@ -1,11 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { WalletProvider } from './WalletProvider';
 import { WalletConnector } from './WalletConnector';
 import { YellForm } from './YellForm';
 import { WallOfScreams } from './WallOfScreams';
+import { TopScreams } from './TopScreams';
 
 
 const YellexApp = () => {
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  const handleSuccessfulPost = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
+
   return (
     <WalletProvider>
       <div className="h-screen bg-gradient-terminal relative overflow-hidden flex flex-col">
@@ -33,13 +40,14 @@ const YellexApp = () => {
         {/* Main Content - Split Layout */}
         <main className="relative z-10 flex-1 flex flex-col lg:flex-row gap-6 px-4 md:px-6 pb-24 overflow-hidden">
           {/* Left Pane - Posting/Recording (Always Visible) */}
-          <div className="w-full lg:w-96 lg:min-w-96 lg:max-w-96 flex-shrink-0 overflow-y-auto">
-            <YellForm />
+          <div className="w-full lg:w-96 lg:min-w-96 lg:max-w-96 flex-shrink-0 overflow-y-auto space-y-6">
+            <YellForm onSuccessfulPost={handleSuccessfulPost} />
+            <TopScreams refreshTrigger={refreshTrigger} />
           </div>
           
           {/* Right Pane - Wall of Screams (Scrollable) */}
           <div className="flex-1 min-w-0 overflow-y-auto">
-            <WallOfScreams />
+            <WallOfScreams refreshTrigger={refreshTrigger} />
           </div>
         </main>
 

@@ -8,9 +8,13 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { Mic, Square, Play, Pause, Trash2, MessageSquare, Sparkles } from 'lucide-react';
 import { useYellSubmission } from '@/hooks/useYellSubmission';
+
+interface YellFormProps {
+  onSuccessfulPost?: () => void;
+}
 import { YELL_TAGS, AI_SCREAMS, MAX_MESSAGE_LENGTH, MAX_AUDIO_DURATION_MS } from '@/config/constants';
 
-export const YellForm = () => {
+export const YellForm = ({ onSuccessfulPost }: YellFormProps) => {
   const { submitYell, isSubmitting } = useYellSubmission();
   const [message, setMessage] = useState('');
   const [exType, setExType] = useState('');
@@ -156,6 +160,9 @@ export const YellForm = () => {
       setMessage('');
       setExType('');
       setAudioBlob(null);
+      
+      // Trigger wall refresh
+      onSuccessfulPost?.();
     }
   };
 
@@ -309,17 +316,21 @@ export const YellForm = () => {
             <Button
               onClick={handleSubmitYell}
               disabled={isSubmitting || (!message.trim() && !audioBlob) || !exType}
-              className="w-full h-16 bg-gradient-to-r from-neon-green via-neon-cyan to-neon-purple text-background font-mono font-bold text-lg rounded-lg transform transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl hover:shadow-neon-cyan/50 active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100 relative overflow-hidden group"
+              className="w-full h-20 bg-gradient-to-r from-destructive via-red-600 to-destructive text-white font-mono font-black text-xl rounded-lg transform transition-all duration-200 hover:scale-[1.03] hover:shadow-2xl hover:shadow-destructive/60 active:scale-[0.97] disabled:opacity-50 disabled:hover:scale-100 relative overflow-hidden group border-2 border-destructive"
             >
               {/* Animated background effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-neon-pink via-transparent to-neon-cyan opacity-0 group-hover:opacity-30 transition-opacity duration-300" />
+              <div className="absolute inset-0 bg-gradient-to-r from-neon-pink via-yellow-400 to-neon-cyan opacity-0 group-hover:opacity-40 transition-opacity duration-200 animate-pulse" />
+              <div className="absolute inset-0 bg-destructive/20 group-hover:bg-destructive/40 transition-colors duration-200" />
               
-              <div className="relative flex flex-col items-center gap-1">
-                <div className="flex items-center gap-2">
-                  <MessageSquare className={`h-5 w-5 ${isSubmitting ? 'animate-pulse' : 'group-hover:animate-bounce'}`} />
-                  <span>{isSubmitting ? 'POSTING...' : 'POST TO WALL'}</span>
+              <div className="relative flex flex-col items-center gap-1 z-10">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">🔥</span>
+                  <span className="tracking-wider">
+                    {isSubmitting ? 'POSTING RAGE...' : 'YELL INTO THE VOID'}
+                  </span>
+                  <span className="text-2xl">🚨</span>
                 </div>
-                <div className="text-xs opacity-80">0.01 SOL</div>
+                <div className="text-sm opacity-90 font-normal">0.01 SOL • POST MY RAGE</div>
               </div>
             </Button>
           </div>
