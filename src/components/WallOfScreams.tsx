@@ -273,50 +273,56 @@ export const WallOfScreams = ({ refreshTrigger }: WallOfScreamsProps) => {
               <div className="space-y-3">
                 {scream.has_audio && scream.audio_data ? (
                   <div className="space-y-3">
-                    <div className="flex items-center gap-3 p-4 bg-muted/20 rounded border border-accent/30">
-                      <Button
-                        onClick={() => playAudio(scream.id, scream.audio_data!)}
-                        size="sm"
-                        className="btn-glitch"
-                      >
-                        {playingAudio === scream.id ? (
-                          <>
-                            <Pause className="h-4 w-4 mr-2" />
-                            Playing...
-                          </>
-                        ) : (
-                          <>
-                            <Play className="h-4 w-4 mr-2" />
-                            Play Audio
-                          </>
-                        )}
-                      </Button>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <Volume2 className="h-4 w-4 text-neon-cyan" />
-                          <div className="h-2 bg-muted rounded-full flex-1 overflow-hidden">
-                            <div 
-                              className={`h-full bg-gradient-to-r from-neon-cyan to-neon-purple transition-all duration-300 ${
-                                playingAudio === scream.id ? 'w-full' : 'w-0'
-                              }`}
-                            />
+                    {/* Enhanced Audio Player */}
+                    <div className="p-4 terminal-window border-2 border-neon-cyan/50 rounded-lg bg-gradient-to-r from-neon-cyan/5 to-transparent relative overflow-hidden">
+                      {/* Audio visualizer effect */}
+                      <div className="absolute inset-0 bg-gradient-to-r from-neon-cyan/10 via-transparent to-neon-pink/10 animate-pulse" />
+                      
+                      <div className="relative flex items-center gap-3">
+                        <Button
+                          onClick={() => playAudio(scream.id, scream.audio_data!)}
+                          size="sm"
+                          className="h-10 px-4 btn-glitch font-mono touch-manipulation"
+                        >
+                          {playingAudio === scream.id ? (
+                            <>
+                              <Pause className="h-4 w-4 mr-2" />
+                              Playing...
+                            </>
+                          ) : (
+                            <>
+                              <Play className="h-4 w-4 mr-2" />
+                              Play Audio
+                            </>
+                          )}
+                        </Button>
+                        
+                        <div className="flex items-center gap-2 flex-1">
+                          <Volume2 className="h-4 w-4 text-neon-cyan animate-pulse" />
+                          <div className="flex-1">
+                            <span className="text-xs font-mono text-neon-cyan font-bold block">
+                              🎵 VOICE FROM THE VOID
+                            </span>
+                            <span className="text-xs font-mono text-muted-foreground">
+                              Raw audio stream • Blockchain verified
+                            </span>
                           </div>
                         </div>
                       </div>
-                    </div>
-                    {scream.message && (
-                      <blockquote className="border-l-4 border-primary pl-4 italic font-mono text-foreground bg-muted/10 p-3 rounded">
-                        "{scream.message}"
-                      </blockquote>
-                    )}
-                  </div>
-                ) : (
-                  scream.message && (
-                    <blockquote className="border-l-4 border-primary pl-4 italic font-mono text-foreground bg-muted/10 p-3 rounded leading-relaxed">
-                      "{scream.message}"
-                    </blockquote>
-                  )
-                )}
+                     </div>
+                     {scream.message && (
+                       <blockquote className="border-l-4 border-primary pl-4 italic font-mono text-foreground bg-muted/10 p-3 rounded">
+                         "{scream.message}"
+                       </blockquote>
+                     )}
+                   </div>
+                 ) : (
+                   scream.message && (
+                     <blockquote className="border-l-4 border-primary pl-4 italic font-mono text-foreground bg-muted/10 p-3 rounded leading-relaxed">
+                       "{scream.message}"
+                     </blockquote>
+                   )
+                 )}
               </div>
 
               {/* Actions */}

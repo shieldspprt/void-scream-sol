@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { Mic, Square, Play, Pause, Trash2, MessageSquare, Sparkles } from 'lucide-react';
 import { useYellSubmission } from '@/hooks/useYellSubmission';
+import { SuccessConfirmation } from './SuccessConfirmation';
 
 interface YellFormProps {
   onSuccessfulPost?: () => void;
@@ -22,6 +23,7 @@ export const YellForm = ({ onSuccessfulPost }: YellFormProps) => {
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [recordingStartTime, setRecordingStartTime] = useState<number | null>(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -156,10 +158,8 @@ export const YellForm = ({ onSuccessfulPost }: YellFormProps) => {
     });
 
     if (result.success) {
-      // Reset form on success
-      setMessage('');
-      setExType('');
-      setAudioBlob(null);
+      // Show success confirmation
+      setShowSuccessModal(true);
       
       // Trigger wall refresh
       onSuccessfulPost?.();
@@ -311,12 +311,12 @@ export const YellForm = ({ onSuccessfulPost }: YellFormProps) => {
             </TabsContent>
           </Tabs>
 
-          {/* Enhanced Action Button */}
-          <div className="pt-6 border-t border-primary/30">
+          {/* Enhanced Action Button - Mobile Optimized */}
+          <div className="pt-6 border-t border-primary/30 space-y-4">
             <Button
               onClick={handleSubmitYell}
               disabled={isSubmitting || (!message.trim() && !audioBlob) || !exType}
-              className="w-full h-20 bg-gradient-to-r from-destructive via-red-600 to-destructive text-white font-mono font-black text-xl rounded-lg transform transition-all duration-200 hover:scale-[1.03] hover:shadow-2xl hover:shadow-destructive/60 active:scale-[0.97] disabled:opacity-50 disabled:hover:scale-100 relative overflow-hidden group border-2 border-destructive"
+              className="w-full h-20 sm:h-16 bg-gradient-to-r from-destructive via-red-600 to-destructive text-white font-mono font-black text-xl sm:text-lg rounded-lg transform transition-all duration-200 hover:scale-[1.03] hover:shadow-2xl hover:shadow-destructive/60 active:scale-[0.97] disabled:opacity-50 disabled:hover:scale-100 relative overflow-hidden group border-2 border-destructive touch-manipulation"
             >
               {/* Animated background effect */}
               <div className="absolute inset-0 bg-gradient-to-r from-neon-pink via-yellow-400 to-neon-cyan opacity-0 group-hover:opacity-40 transition-opacity duration-200 animate-pulse" />
@@ -333,6 +333,19 @@ export const YellForm = ({ onSuccessfulPost }: YellFormProps) => {
                 <div className="text-sm opacity-90 font-normal">0.01 SOL • POST MY RAGE</div>
               </div>
             </Button>
+            
+            {/* Mobile-optimized Reset Button */}
+            <Button
+              onClick={() => {
+                setMessage('');
+                setExType('');
+                setAudioBlob(null);
+              }}
+              variant="outline"
+              className="w-full h-12 btn-glitch font-mono text-sm touch-manipulation"
+            >
+              🔄 RESET RAGE
+            </Button>
           </div>
 
           {exType && (
@@ -344,6 +357,17 @@ export const YellForm = ({ onSuccessfulPost }: YellFormProps) => {
           )}
         </CardContent>
       </Card>
+      
+      {/* Success Confirmation Modal */}
+      <SuccessConfirmation
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        onYellAgain={() => {
+          setMessage('');
+          setExType('');
+          setAudioBlob(null);
+        }}
+      />
     </div>
   );
 };

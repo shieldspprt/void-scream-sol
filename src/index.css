@@ -238,3 +238,20 @@ All colors MUST be HSL for dark terminal/cyberpunk aesthetic
   0% { transform: translateY(-100%); }
   100% { transform: translateY(100vh); }
 }
+
+/* Mobile touch optimization */
+.touch-manipulation {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Enhanced button sizing for mobile */
+@media (max-width: 768px) {
+  .btn-neon, .btn-glitch, .btn-yell {
+    @apply min-h-12 px-6 text-base;
+  }
+  
+  .terminal-window {
+    @apply p-4;
+  }
+}
