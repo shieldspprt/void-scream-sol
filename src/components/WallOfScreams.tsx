@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Play, Pause, Volume2, Heart, MessageSquare, Linkedin, Copy, X } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Play, Pause, Volume2, Heart, MessageSquare, Linkedin, Copy, X, Clock, TrendingUp, Share2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -20,6 +21,14 @@ interface WallOfScreamsProps {
   refreshTrigger?: number;
 }
 
+type SortOption = 'newest' | 'top-liked' | 'top-shared';
+
+const SORT_OPTIONS = [
+  { value: 'newest' as SortOption, label: 'Newest First', icon: Clock },
+  { value: 'top-liked' as SortOption, label: 'Most Liked', icon: Heart },
+  { value: 'top-shared' as SortOption, label: 'Most Shared', icon: Share2 },
+];
+
 
 const formatTimeAgo = (timestamp: string) => {
   const now = new Date();
@@ -36,19 +45,37 @@ export const WallOfScreams = ({ refreshTrigger }: WallOfScreamsProps) => {
   const [screams, setScreams] = useState<Scream[]>([]);
   const [playingAudio, setPlayingAudio] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [sortBy, setSortBy] = useState<SortOption>('newest');
   const { toast } = useToast();
 
   useEffect(() => {
     fetchScreams();
-  }, [refreshTrigger]);
+  }, [refreshTrigger, sortBy]);
 
   const fetchScreams = async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('screams')
         .select('*')
-        .eq('action', 'post')
-        .order('created_at', { ascending: false });
+        .eq('action', 'post');
+
+      // Apply sorting
+      switch (sortBy) {
+        case 'newest':
+          query = query.order('created_at', { ascending: false });
+          break;
+        case 'top-liked':
+          query = query.order('likes', { ascending: false });
+          break;
+        case 'top-shared':
+          // For now, use likes as a proxy for shares until we implement share tracking
+          query = query.order('likes', { ascending: false });
+          break;
+        default:
+          query = query.order('created_at', { ascending: false });
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       setScreams(data || []);
@@ -170,6 +197,34 @@ export const WallOfScreams = ({ refreshTrigger }: WallOfScreamsProps) => {
             <p className="text-muted-foreground font-mono text-sm">
               &gt; anonymous_rage_collection.exe
             </p>
+            
+            {/* Sort Controls */}
+            <div className="flex items-center justify-center gap-4">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 text-neon-cyan" />
+                <span className="text-xs font-mono text-muted-foreground">SORT BY:</span>
+              </div>
+              <Select value={sortBy} onValueChange={(value: SortOption) => setSortBy(value)}>
+                <SelectTrigger className="w-40 h-8 text-xs font-mono border-primary/30 hover:border-neon-green">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="terminal-window border-neon-green border-2">
+                  {SORT_OPTIONS.map((option) => (
+                    <SelectItem 
+                      key={option.value} 
+                      value={option.value}
+                      className="font-mono hover:bg-neon-green/20 cursor-pointer transition-colors duration-200"
+                    >
+                      <div className="flex items-center gap-2">
+                        <option.icon className="h-3 w-3" />
+                        {option.label}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
             <div className="flex justify-center gap-4 text-xs font-mono">
               <span className="text-neon-green animate-pulse">🗣 {screams.length} screams so far</span>
               <span className="text-neon-cyan">💙 {screams.reduce((sum, s) => sum + s.likes, 0)} total likes</span>
