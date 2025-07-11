@@ -8,7 +8,7 @@ import { WallOfScreams } from './WallOfScreams';
 const YellexApp = () => {
   return (
     <WalletProvider>
-      <div className="min-h-screen bg-gradient-terminal relative overflow-hidden flex flex-col">
+      <div className="h-screen bg-gradient-terminal relative overflow-hidden flex flex-col">
         {/* Terminal scanlines overlay */}
         <div className="scanlines absolute inset-0 pointer-events-none opacity-20" />
         
