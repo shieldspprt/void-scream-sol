@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Play, Pause, Volume2, Heart, MessageSquare } from 'lucide-react';
+import { Play, Pause, Volume2, Heart, MessageSquare, Share2, Copy, ExternalLink } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface Scream {
   id: string;
@@ -31,6 +32,7 @@ export const WallOfScreams = () => {
   const [screams, setScreams] = useState<Scream[]>([]);
   const [playingAudio, setPlayingAudio] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     fetchScreams();
@@ -96,6 +98,38 @@ export const WallOfScreams = () => {
       console.error('Error playing audio:', error);
       setPlayingAudio(null);
     }
+  };
+
+  const handleCopyLink = async (screamId: string) => {
+    try {
+      const link = `${window.location.origin}?scream=${screamId}`;
+      await navigator.clipboard.writeText(link);
+      toast({
+        title: "Link copied!",
+        description: "Share this scream with the world",
+      });
+    } catch (error) {
+      console.error('Error copying link:', error);
+      toast({
+        title: "Failed to copy link",
+        description: "Please try again",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleShareToX = (scream: Scream) => {
+    const text = scream.message || 'Check out this scream from YELLEX';
+    const url = `${window.location.origin}?scream=${scream.id}`;
+    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+    window.open(twitterUrl, '_blank');
+  };
+
+  const handleShareToLinkedIn = (scream: Scream) => {
+    const text = scream.message || 'Check out this scream from YELLEX';
+    const url = `${window.location.origin}?scream=${scream.id}`;
+    const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
+    window.open(linkedInUrl, '_blank');
   };
 
   if (loading) {
@@ -228,15 +262,49 @@ export const WallOfScreams = () => {
 
               {/* Actions */}
               <div className="flex items-center justify-between pt-3 border-t border-primary/20">
-                <Button
-                  onClick={() => handleLike(scream.id)}
-                  variant="ghost"
-                  size="sm"
-                  className="font-mono hover:text-neon-pink hover:bg-neon-pink/10"
-                >
-                  <Heart className="h-4 w-4 mr-2" />
-                  {scream.likes}
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    onClick={() => handleLike(scream.id)}
+                    variant="ghost"
+                    size="sm"
+                    className="font-mono hover:text-neon-pink hover:bg-neon-pink/10"
+                  >
+                    <Heart className="h-4 w-4 mr-2" />
+                    {scream.likes}
+                  </Button>
+                  
+                  <div className="flex items-center gap-1">
+                    <Button
+                      onClick={() => handleCopyLink(scream.id)}
+                      variant="ghost"
+                      size="sm"
+                      className="font-mono hover:text-neon-cyan hover:bg-neon-cyan/10 px-2"
+                      title="Copy link"
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                    
+                    <Button
+                      onClick={() => handleShareToX(scream)}
+                      variant="ghost"
+                      size="sm"
+                      className="font-mono hover:text-neon-purple hover:bg-neon-purple/10 px-2"
+                      title="Share to X"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                    </Button>
+                    
+                    <Button
+                      onClick={() => handleShareToLinkedIn(scream)}
+                      variant="ghost"
+                      size="sm"
+                      className="font-mono hover:text-neon-green hover:bg-neon-green/10 px-2"
+                      title="Share to LinkedIn"
+                    >
+                      <Share2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
                 
                 <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono">
                   <MessageSquare className="h-3 w-3" />
