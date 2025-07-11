@@ -31,14 +31,14 @@ const YellexApp = () => {
         </header>
 
         {/* Main Content - Split Layout */}
-        <main className="relative z-10 flex-1 flex flex-col lg:flex-row gap-6 px-4 md:px-6 pb-24 min-h-0">
-          {/* Left Pane - Posting/Recording */}
-          <div className="w-full lg:w-96 lg:min-w-96 lg:max-w-96 flex-shrink-0">
+        <main className="relative z-10 flex-1 flex flex-col lg:flex-row gap-6 px-4 md:px-6 pb-24 overflow-hidden">
+          {/* Left Pane - Posting/Recording (Always Visible) */}
+          <div className="w-full lg:w-96 lg:min-w-96 lg:max-w-96 flex-shrink-0 overflow-y-auto">
             <YellForm />
           </div>
           
-          {/* Right Pane - Wall of Screams */}
-          <div className="flex-1 min-w-0">
+          {/* Right Pane - Wall of Screams (Scrollable) */}
+          <div className="flex-1 min-w-0 overflow-y-auto">
             <WallOfScreams />
           </div>
         </main>
