@@ -104,7 +104,7 @@ export const WallOfScreams = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Header with Refresh Button */}
       <Card className="terminal-window">
         <div className="terminal-header">
           <div className="terminal-dot bg-primary"></div>
@@ -113,16 +113,28 @@ export const WallOfScreams = () => {
           <span className="text-sm font-mono ml-2">wall_of_screams.dat</span>
         </div>
         <CardHeader>
-          <div className="text-center space-y-2">
-            <h2 className="text-3xl font-bold font-mono glitch" data-text="WALL OF SCREAMS">
-              WALL OF SCREAMS
-            </h2>
-            <p className="text-muted-foreground font-mono">
+          <div className="text-center space-y-3">
+            <div className="flex items-center justify-between">
+              <div></div>
+              <h2 className="text-2xl font-bold font-mono glitch" data-text="WALL OF SCREAMS">
+                WALL OF SCREAMS
+              </h2>
+              <Button 
+                onClick={fetchScreams}
+                variant="outline" 
+                size="sm"
+                className="btn-neon font-mono h-8 px-3 text-xs animate-none hover:animate-spin transition-all duration-300"
+                disabled={loading}
+              >
+                🔄 {loading ? 'LOADING' : 'REFRESH'}
+              </Button>
+            </div>
+            <p className="text-muted-foreground font-mono text-sm">
               &gt; anonymous_rage_collection.exe
             </p>
-            <div className="flex justify-center gap-4 text-sm font-mono">
-              <span className="text-neon-green">{screams.length} total screams</span>
-              <span className="text-neon-cyan">{screams.reduce((sum, s) => sum + s.likes, 0)} total likes</span>
+            <div className="flex justify-center gap-4 text-xs font-mono">
+              <span className="text-neon-green">{screams.length} screams</span>
+              <span className="text-neon-cyan">{screams.reduce((sum, s) => sum + s.likes, 0)} likes</span>
             </div>
           </div>
         </CardHeader>
@@ -237,14 +249,6 @@ export const WallOfScreams = () => {
         )}
       </div>
 
-      {/* Load More */}
-      {screams.length > 0 && (
-        <div className="text-center">
-          <Button variant="outline" className="btn-neon font-mono" onClick={fetchScreams}>
-            &gt; refresh_screams()
-          </Button>
-        </div>
-      )}
     </div>
   );
 };

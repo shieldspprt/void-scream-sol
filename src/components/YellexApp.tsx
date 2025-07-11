@@ -8,7 +8,7 @@ import { WallOfScreams } from './WallOfScreams';
 const YellexApp = () => {
   return (
     <WalletProvider>
-      <div className="min-h-screen bg-gradient-terminal relative overflow-hidden">
+      <div className="min-h-screen bg-gradient-terminal relative overflow-hidden flex flex-col">
         {/* Terminal scanlines overlay */}
         <div className="scanlines absolute inset-0 pointer-events-none opacity-20" />
         
@@ -30,10 +30,17 @@ const YellexApp = () => {
           </div>
         </header>
 
-        {/* Main Content */}
-        <main className="relative z-10 max-w-4xl mx-auto px-4 md:px-6 pb-24 space-y-8">
-          <YellForm />
-          <WallOfScreams />
+        {/* Main Content - Split Layout */}
+        <main className="relative z-10 flex-1 flex flex-col lg:flex-row gap-6 px-4 md:px-6 pb-24 min-h-0">
+          {/* Left Pane - Posting/Recording */}
+          <div className="w-full lg:w-96 lg:min-w-96 lg:max-w-96 flex-shrink-0">
+            <YellForm />
+          </div>
+          
+          {/* Right Pane - Wall of Screams */}
+          <div className="flex-1 min-w-0">
+            <WallOfScreams />
+          </div>
         </main>
 
         {/* Footer */}

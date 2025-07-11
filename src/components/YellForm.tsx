@@ -160,39 +160,39 @@ export const YellForm = () => {
   };
 
   return (
-    <div className="space-y-8">
-      {/* Terminal Header */}
+    <div className="space-y-4">
+      {/* Compact Terminal Header */}
       <Card className="terminal-window">
         <div className="terminal-header">
           <div className="terminal-dot bg-destructive"></div>
           <div className="terminal-dot bg-secondary"></div>
           <div className="terminal-dot bg-primary"></div>
-          <span className="text-sm font-mono ml-2">yellex_terminal_v1.0</span>
+          <span className="text-sm font-mono ml-2">yellex_post.exe</span>
         </div>
-        <CardHeader className="pb-8">
-          <CardTitle className="text-3xl font-mono text-center py-4">
-            <span className="glitch" data-text="PREPARE YOUR RAGE">
-              PREPARE YOUR RAGE
+        <CardHeader className="pb-4">
+          <CardTitle className="text-xl font-mono text-center py-2">
+            <span className="glitch" data-text="COMPOSE RAGE">
+              COMPOSE RAGE
             </span>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-8 p-8">
+        <CardContent className="space-y-6 p-6">
           {/* Ex Type Selector */}
-          <div className="space-y-4 animate-pulse-slow">
-            <label className="text-xl font-mono text-neon-green font-bold flex items-center gap-2">
+          <div className="space-y-3">
+            <label className="text-sm font-mono text-neon-green font-bold flex items-center gap-2">
               &gt; SELECT_EX_TYPE:
-              <span className="text-neon-pink text-sm">(Required)</span>
+              <span className="text-neon-pink text-xs">(Required)</span>
             </label>
             <Select value={exType} onValueChange={setExType}>
-              <SelectTrigger className="terminal-window font-mono h-14 text-lg border-2 border-neon-green shadow-glow-green hover:shadow-glow-green-lg transition-all duration-300">
-                <SelectValue placeholder="What kind of disaster were they? (Click to select)" />
+              <SelectTrigger className="terminal-window font-mono h-12 text-sm border-2 border-primary/30 hover:border-neon-green glow-neon transition-all duration-300">
+                <SelectValue placeholder="What kind of disaster were they?" />
               </SelectTrigger>
-              <SelectContent className="terminal-window border-neon-green border-2 shadow-glow-green">
+              <SelectContent className="terminal-window border-neon-green border-2 glow-neon">
                 {YELL_TAGS.map((type) => (
                   <SelectItem 
                     key={type} 
                     value={type} 
-                    className="font-mono hover:bg-neon-green/20 py-4 text-lg cursor-pointer transition-colors duration-200"
+                    className="font-mono hover:bg-neon-green/20 py-3 cursor-pointer transition-colors duration-200"
                   >
                     {type}
                   </SelectItem>
@@ -202,100 +202,101 @@ export const YellForm = () => {
           </div>
 
           {/* Input Methods */}
-          <Tabs defaultValue="voice" className="space-y-6">
-            <TabsList className="grid grid-cols-2 terminal-window h-14">
-              <TabsTrigger value="text" className="font-mono text-base py-3">
-                📝 Text Rage
+          <Tabs defaultValue="voice" className="space-y-4">
+            <TabsList className="grid grid-cols-2 terminal-window h-12">
+              <TabsTrigger value="text" className="font-mono text-sm py-2">
+                📝 Text
               </TabsTrigger>
-              <TabsTrigger value="voice" className="font-mono text-base py-3">
-                🎤 Voice Scream
+              <TabsTrigger value="voice" className="font-mono text-sm py-2">
+                🎤 Voice
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="text" className="space-y-6">
-              <div className="space-y-4">
+            <TabsContent value="text" className="space-y-4">
+              <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <label className="text-base font-mono text-neon-green font-bold">
-                    &gt; COMPOSE_SCREAM:
+                  <label className="text-sm font-mono text-neon-green font-bold">
+                    &gt; COMPOSE:
                   </label>
                   <Button
                     onClick={generateAiScream}
                     variant="outline"
-                    size="default"
-                    className="btn-glitch h-10"
+                    size="sm"
+                    className="btn-glitch h-8"
                   >
-                    <Sparkles className="h-4 w-4 mr-2" />
-                    AI Generate
+                    <Sparkles className="h-3 w-3 mr-1" />
+                    AI
                   </Button>
                 </div>
                 <Textarea
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  placeholder="Let it all out... they'll never see this (unless you post it to the wall)"
-                  className="min-h-40 terminal-window font-mono text-foreground bg-input border-primary/30 focus:border-primary resize-none text-base p-4"
+                  placeholder="Let it all out..."
+                  className="min-h-32 terminal-window font-mono text-foreground bg-input border-primary/30 focus:border-primary resize-none text-sm p-3"
                   maxLength={MAX_MESSAGE_LENGTH}
                 />
-                <div className="text-right text-sm text-muted-foreground font-mono">
-                  {message.length}/{MAX_MESSAGE_LENGTH} characters
+                <div className="text-right text-xs text-muted-foreground font-mono">
+                  {message.length}/{MAX_MESSAGE_LENGTH}
                 </div>
               </div>
             </TabsContent>
 
-            <TabsContent value="voice" className="space-y-6">
-              <div className="space-y-6">
-                <label className="text-base font-mono text-neon-green font-bold">
-                  &gt; RECORD_VOICE_SCREAM:
+            <TabsContent value="voice" className="space-y-4">
+              <div className="space-y-4">
+                <label className="text-sm font-mono text-neon-green font-bold">
+                  &gt; RECORD:
                 </label>
                 
-                <div className="flex items-center justify-center gap-4 p-12 terminal-window">
+                <div className="flex items-center justify-center gap-3 p-8 terminal-window">
                   {!isRecording ? (
                     <Button
                       onClick={startRecording}
-                      size="lg"
-                      className="btn-neon h-16 px-8 text-lg"
+                      size="default"
+                      className="btn-neon h-12 px-6"
                       disabled={isSubmitting}
                     >
-                      <Mic className="h-6 w-6 mr-3" />
-                      Start Recording
+                      <Mic className="h-4 w-4 mr-2" />
+                      Record
                     </Button>
                   ) : (
                     <Button
                       onClick={stopRecording}
-                      size="lg"
-                      className="btn-yell animate-pulse h-16 px-8 text-lg"
+                      size="default"
+                      className="btn-yell animate-pulse h-12 px-6"
                     >
-                      <Square className="h-6 w-6 mr-3" />
-                      Stop Recording
+                      <Square className="h-4 w-4 mr-2" />
+                      Stop
                     </Button>
                   )}
                 </div>
 
                 {audioBlob && (
-                  <div className="flex items-center justify-center gap-4 p-6 terminal-window">
+                  <div className="flex items-center justify-center gap-3 p-4 terminal-window">
                     <Button
                       onClick={playAudio}
                       disabled={isPlaying}
-                      className="btn-glitch h-12 px-6"
+                      className="btn-glitch h-10 px-4"
+                      size="sm"
                     >
                       {isPlaying ? (
                         <>
-                          <Pause className="h-5 w-5 mr-2" />
-                          Playing...
+                          <Pause className="h-4 w-4 mr-1" />
+                          Playing
                         </>
                       ) : (
                         <>
-                          <Play className="h-5 w-5 mr-2" />
-                          Play Recording
+                          <Play className="h-4 w-4 mr-1" />
+                          Play
                         </>
                       )}
                     </Button>
                     <Button
                       onClick={() => setAudioBlob(null)}
                       variant="outline"
-                      size="default"
-                      className="btn-neon h-12 px-4"
+                      size="sm"
+                      className="btn-neon h-10 px-3"
                     >
-                      <Trash2 className="h-5 w-5" />
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 )}
@@ -303,25 +304,30 @@ export const YellForm = () => {
             </TabsContent>
           </Tabs>
 
-          {/* Action Button */}
-          <div className="flex justify-center pt-8 border-t border-primary/30">
+          {/* Enhanced Action Button */}
+          <div className="pt-6 border-t border-primary/30">
             <Button
               onClick={handleSubmitYell}
               disabled={isSubmitting || (!message.trim() && !audioBlob) || !exType}
-              className="bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 text-white font-bold rounded-md transform transition-transform duration-300 hover:scale-110 hover:shadow-lg hover:shadow-cyan-500/70 h-20 text-xl flex flex-col gap-1 ring-4 ring-cyan-400 shadow-lg shadow-cyan-400/50 w-full max-w-md"
+              className="w-full h-16 bg-gradient-to-r from-neon-green via-neon-cyan to-neon-purple text-background font-mono font-bold text-lg rounded-lg transform transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl hover:shadow-neon-cyan/50 active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100 relative overflow-hidden group"
             >
-              <div className="flex items-center">
-                <MessageSquare className="h-7 w-7 mr-3 animate-pulse text-white" />
-                {isSubmitting ? 'POSTING...' : 'POST TO WALL'}
+              {/* Animated background effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-neon-pink via-transparent to-neon-cyan opacity-0 group-hover:opacity-30 transition-opacity duration-300" />
+              
+              <div className="relative flex flex-col items-center gap-1">
+                <div className="flex items-center gap-2">
+                  <MessageSquare className={`h-5 w-5 ${isSubmitting ? 'animate-pulse' : 'group-hover:animate-bounce'}`} />
+                  <span>{isSubmitting ? 'POSTING...' : 'POST TO WALL'}</span>
+                </div>
+                <div className="text-xs opacity-80">0.01 SOL</div>
               </div>
-              <div className="text-sm opacity-90">0.01 SOL</div>
             </Button>
           </div>
 
           {exType && (
-            <div className="text-center pt-4">
-              <Badge variant="outline" className="terminal-window text-neon-pink border-neon-pink text-base py-2 px-4">
-                Targeting: {exType}
+            <div className="text-center pt-2">
+              <Badge variant="outline" className="terminal-window text-neon-pink border-neon-pink text-sm py-1 px-3">
+                Target: {exType}
               </Badge>
             </div>
           )}

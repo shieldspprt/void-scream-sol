@@ -176,11 +176,11 @@ All colors MUST be HSL for dark terminal/cyberpunk aesthetic
   }
 
   .btn-neon {
-    @apply bg-primary text-primary-foreground font-bold py-2 px-6 rounded border-2 border-primary transition-all duration-200 hover:bg-transparent hover:text-primary hover:glow-neon;
+    @apply bg-primary text-primary-foreground font-bold py-2 px-6 rounded border-2 border-primary transition-all duration-300 hover:bg-transparent hover:text-primary hover:glow-neon hover:scale-[1.05] active:scale-[0.95];
   }
 
   .btn-glitch {
-    @apply bg-secondary text-secondary-foreground font-bold py-2 px-6 rounded transition-all duration-200 hover:bg-transparent hover:text-secondary hover:glow-pink;
+    @apply bg-secondary text-secondary-foreground font-bold py-2 px-6 rounded transition-all duration-300 hover:bg-transparent hover:text-secondary hover:glow-pink hover:scale-[1.05] active:scale-[0.95];
   }
 
   /* Mobile responsive improvements */
