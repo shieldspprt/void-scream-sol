@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
-import { Mic, Square, Play, Pause, Trash2, Flame, MessageSquare, Sparkles } from 'lucide-react';
+import { Mic, Square, Play, Pause, Trash2, MessageSquare, Sparkles } from 'lucide-react';
 import { useYellSubmission } from '@/hooks/useYellSubmission';
 import { YELL_TAGS, AI_SCREAMS, MAX_MESSAGE_LENGTH, MAX_AUDIO_DURATION_MS } from '@/config/constants';
 
@@ -144,8 +144,8 @@ export const YellForm = () => {
     });
   };
 
-  const handleSubmitYell = async (action: 'burn' | 'post') => {
-    const result = await submitYell(action, {
+  const handleSubmitYell = async () => {
+    const result = await submitYell('post', {
       message,
       exType,
       audioBlob
@@ -303,24 +303,12 @@ export const YellForm = () => {
             </TabsContent>
           </Tabs>
 
-          {/* Action Buttons */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-8 border-t border-primary/30">
+          {/* Action Button */}
+          <div className="flex justify-center pt-8 border-t border-primary/30">
             <Button
-              onClick={() => handleSubmitYell('burn')}
+              onClick={handleSubmitYell}
               disabled={isSubmitting || (!message.trim() && !audioBlob) || !exType}
-              className="btn-yell h-20 text-xl flex flex-col gap-1 bg-gradient-to-r from-red-600 via-red-700 to-red-800 hover:from-red-700 hover:via-red-800 hover:to-red-900 shadow-lg shadow-red-600/50 transform transition-transform duration-300 hover:scale-105"
-            >
-              <div className="flex items-center">
-                <Flame className="h-7 w-7 mr-3 text-yellow-300 animate-pulse" />
-                {isSubmitting ? 'BURNING...' : 'BURN FOREVER'}
-              </div>
-              <div className="text-sm opacity-90 text-yellow-200">FREE</div>
-            </Button>
-            
-            <Button
-              onClick={() => handleSubmitYell('post')}
-              disabled={isSubmitting || (!message.trim() && !audioBlob) || !exType}
-              className="bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 text-white font-bold rounded-md transform transition-transform duration-300 hover:scale-110 hover:shadow-lg hover:shadow-cyan-500/70 h-20 text-xl flex flex-col gap-1 ring-4 ring-cyan-400 shadow-lg shadow-cyan-400/50"
+              className="bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 text-white font-bold rounded-md transform transition-transform duration-300 hover:scale-110 hover:shadow-lg hover:shadow-cyan-500/70 h-20 text-xl flex flex-col gap-1 ring-4 ring-cyan-400 shadow-lg shadow-cyan-400/50 w-full max-w-md"
             >
               <div className="flex items-center">
                 <MessageSquare className="h-7 w-7 mr-3 animate-pulse text-white" />

@@ -1,16 +1,11 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { WalletProvider } from './WalletProvider';
 import { WalletConnector } from './WalletConnector';
-import { QuickYellForm } from './QuickYellForm';
 import { YellForm } from './YellForm';
 import { WallOfScreams } from './WallOfScreams';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 
 const YellexApp = () => {
-  const [activeTab, setActiveTab] = useState("quick");
-
   return (
     <WalletProvider>
       <div className="min-h-screen bg-gradient-terminal relative overflow-hidden">
@@ -37,25 +32,7 @@ const YellexApp = () => {
 
         {/* Main Content */}
         <main className="relative z-10 max-w-4xl mx-auto px-4 md:px-6 pb-24 space-y-8">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid grid-cols-2 terminal-window h-12 mx-auto max-w-md">
-              <TabsTrigger value="quick" className="font-mono text-sm py-2">
-                🚀 Quick Yell
-              </TabsTrigger>
-              <TabsTrigger value="advanced" className="font-mono text-sm py-2">
-                🎤 Advanced
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="quick" className="space-y-8">
-              <QuickYellForm />
-            </TabsContent>
-
-            <TabsContent value="advanced" className="space-y-8">
-              <YellForm />
-            </TabsContent>
-          </Tabs>
-          
+          <YellForm />
           <WallOfScreams />
         </main>
 
@@ -66,7 +43,7 @@ const YellexApp = () => {
               powered by rage and blockchain
             </span>
             <span className="mx-2">|</span>
-            <span className="text-neon-cyan">Post: 0.01 SOL • Burn: FREE</span>
+            <span className="text-neon-cyan">Post: 0.01 SOL</span>
           </div>
         </footer>
       </div>
