@@ -324,13 +324,13 @@ export const YellForm = ({ onSuccessfulPost }: YellFormProps) => {
               
               <div className="relative flex flex-col items-center gap-1 z-10">
                 <div className="flex items-center gap-3">
-                  <span className="text-2xl">🔥</span>
+                  <span className="text-2xl">💰</span>
                   <span className="tracking-wider">
-                    {isSubmitting ? 'POSTING RAGE...' : 'YELL INTO THE VOID'}
+                    {isSubmitting ? 'EARNING YLX...' : 'SCREAM TO GET 100 $YLX'}
                   </span>
                   <span className="text-2xl">🚨</span>
                 </div>
-                <div className="text-sm opacity-90 font-normal">0.01 SOL • POST MY RAGE</div>
+                <div className="text-sm opacity-90 font-normal">0.01 SOL • EARN 100 $YLX</div>
               </div>
             </Button>
             

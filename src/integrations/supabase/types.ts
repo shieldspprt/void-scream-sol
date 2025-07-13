@@ -27,6 +27,8 @@ export type Database = {
           transaction_signature: string | null
           updated_at: string
           wallet_address: string
+          ylx_reward_signature: string | null
+          ylx_tokens_rewarded: boolean | null
         }
         Insert: {
           action: string
@@ -40,6 +42,8 @@ export type Database = {
           transaction_signature?: string | null
           updated_at?: string
           wallet_address: string
+          ylx_reward_signature?: string | null
+          ylx_tokens_rewarded?: boolean | null
         }
         Update: {
           action?: string
@@ -53,6 +57,8 @@ export type Database = {
           transaction_signature?: string | null
           updated_at?: string
           wallet_address?: string
+          ylx_reward_signature?: string | null
+          ylx_tokens_rewarded?: boolean | null
         }
         Relationships: []
       }

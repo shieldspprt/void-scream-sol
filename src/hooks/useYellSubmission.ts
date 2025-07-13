@@ -184,6 +184,53 @@ export const useYellSubmission = () => {
         throw new Error('Failed to save to database');
       }
 
+      // Reward YLX tokens for posts only
+      if (action === 'post' && publicKey) {
+        try {
+          console.log('🎁 Requesting YLX token reward...');
+          
+          const { data: insertedScream } = await supabase
+            .from('screams')
+            .select('id')
+            .eq('wallet_address', publicKey.toString())
+            .eq('transaction_signature', transactionSignature)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
+
+          if (insertedScream) {
+            const { data: rewardResult, error: rewardError } = await supabase.functions.invoke(
+              'reward-ylx-tokens',
+              {
+                body: {
+                  userWalletAddress: publicKey.toString(),
+                  screamId: insertedScream.id,
+                  transactionSignature
+                }
+              }
+            );
+
+            if (rewardError) {
+              console.warn('YLX reward failed:', rewardError);
+              toast({
+                title: "⚠️ Token reward pending",
+                description: "Your scream was posted but YLX tokens are processing. Contact support if not received.",
+                variant: "default"
+              });
+            } else if (rewardResult?.success) {
+              toast({
+                title: "🎉 YLX TOKENS REWARDED!",
+                description: `Received ${rewardResult.amount || 100} $YLX tokens!`,
+                className: "border-neon-green"
+              });
+            }
+          }
+        } catch (rewardError) {
+          console.warn('YLX reward processing error:', rewardError);
+          // Don't fail the main flow for reward errors
+        }
+      }
+
       // Success notifications
       if (action === 'burn') {
         toast({
