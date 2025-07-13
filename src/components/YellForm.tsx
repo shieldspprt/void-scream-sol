@@ -325,7 +325,7 @@ export const YellForm = ({ onSuccessfulPost }: YellFormProps) => {
               <div className="relative flex flex-col items-center gap-1 z-10">
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">💰</span>
-                  <span className="tracking-wider">
+                  <span className="tracking-wider text-xl font-bold text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)] glow-text">
                     {isSubmitting ? 'EARNING YLX...' : 'SCREAM TO GET 100 $YLX'}
                   </span>
                   <span className="text-2xl">🚨</span>
