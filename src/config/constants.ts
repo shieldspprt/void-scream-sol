@@ -26,6 +26,11 @@ export const RPC_ENDPOINT = RPC_ENDPOINTS[0]; // Default to Helius
 export const YELLEX_TREASURY_WALLET = 'BMgz5grWtsgHsoPnrczXZdhDgT3wBSufNjyYU5jFyFrs';
 export const POST_PRICE_SOL = 0.01;
 
+// $YLX Token Configuration
+export const YLX_TOKEN_MINT = 'YOUR_YLX_TOKEN_MINT_ADDRESS'; // Replace with actual mint address
+export const YLX_REWARD_AMOUNT = 100;
+export const YLX_TOKEN_DECIMALS = 6; // Replace with actual decimals (usually 6 or 9)
+
 // App Configuration
 export const MAX_MESSAGE_LENGTH = 280;
 export const MAX_AUDIO_DURATION_MS = 30000; // 30 seconds
