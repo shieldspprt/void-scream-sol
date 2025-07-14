@@ -91,8 +91,8 @@ export const validateTransaction = (
 };
 
 // Create modern versioned transaction with priority fees and compute units
-export const createPaymentTransaction = async (
-  publicKey: PublicKey,
+export const createPaymentWithYlxTransaction = async (
+  publicKey: PublicKey, 
   connection: Connection
 ): Promise<{ transaction: VersionedTransaction; error?: string }> => {
   try {

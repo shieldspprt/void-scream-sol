@@ -5,7 +5,7 @@ import { VersionedTransaction } from '@solana/web3.js';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { validateMessage, validateExType, validateAudioBlob, sanitizeInput } from '@/utils/validation';
-import { validateTransaction, createPaymentTransaction, sendTransactionWithRetry, createConnectionWithFallback } from '@/utils/solana';
+import { validateTransaction, createPaymentWithYlxTransaction, sendTransactionWithRetry, createConnectionWithFallback } from '@/utils/solana';
 
 export interface YellSubmissionData {
   message: string;
@@ -105,8 +105,8 @@ export const useYellSubmission = () => {
           throw new Error(transactionValidation.error);
         }
 
-        // Create payment transaction
-        const { transaction, error: txError } = await createPaymentTransaction(
+        // Create payment transaction with YLX setup
+        const { transaction, error: txError } = await createPaymentWithYlxTransaction(
           publicKey,
           workingConnection
         );
