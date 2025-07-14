@@ -342,26 +342,20 @@ export const YellForm = ({ onSuccessfulPost }: YellFormProps) => {
             <Button
               onClick={handleSubmitYell}
               disabled={isSubmitting || (!message.trim() && !audioBlob) || !exType}
-              className="w-full h-24 sm:h-20 bg-gradient-to-br from-neon-pink via-neon-purple to-neon-cyan text-primary-foreground font-mono font-black text-2xl sm:text-xl rounded-xl transform transition-all duration-300 hover:scale-[1.05] hover:shadow-neon-glow active:scale-[0.95] disabled:opacity-50 disabled:hover:scale-100 relative overflow-hidden group border-4 border-neon-cyan/50 touch-manipulation cursor-pointer animate-pulse"
+              className="w-full h-16 sm:h-14 bg-gradient-to-br from-neon-pink via-neon-purple to-neon-cyan text-black font-mono font-black text-xl sm:text-lg rounded-xl transform transition-all duration-300 hover:scale-[1.02] hover:shadow-neon-glow active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100 relative overflow-hidden group border-2 border-white/30 touch-manipulation cursor-pointer"
             >
-              {/* Dynamic pulsing background */}
-              <div className="absolute inset-0 bg-gradient-to-r from-neon-cyan via-neon-pink to-yellow-400 opacity-60 group-hover:opacity-80 transition-opacity duration-300 animate-pulse" />
+              {/* Bright background for text contrast */}
+              <div className="absolute inset-0 bg-white/90 group-hover:bg-white transition-colors duration-300" />
               
-              {/* Animated scan lines */}
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/10 to-transparent animate-scan opacity-30" />
-              
-              {/* Glow effect border */}
+              {/* Animated border glow */}
               <div className="absolute -inset-1 bg-gradient-to-r from-neon-pink via-neon-cyan to-neon-purple rounded-xl blur-sm opacity-75 group-hover:opacity-100 transition-opacity duration-300" />
               
-              <div className="relative flex flex-col items-center gap-2 z-10 p-2">
-                <div className="flex items-center gap-4">
-                  <span className="text-4xl animate-bounce">💰</span>
-                  <span className="tracking-widest text-2xl sm:text-xl font-black text-white drop-shadow-[0_0_20px_rgba(0,255,255,1)] terminal-glow uppercase">
-                    {isSubmitting ? 'EARNING YLX...' : 'SCREAM TO GET 100 $YLX'}
-                  </span>
-                  <span className="text-4xl animate-bounce">🚀</span>
-                </div>
-                <div className="text-sm font-bold text-neon-cyan/90 tracking-wide uppercase">0.01 SOL → EARN 100 $YLX</div>
+              <div className="relative flex items-center justify-center gap-3 z-10 px-4">
+                <span className="text-2xl">💰</span>
+                <span className="tracking-wide font-black text-black drop-shadow-none">
+                  {isSubmitting ? 'EARNING YLX...' : 'SCREAM TO GET 100 $YLX'}
+                </span>
+                <span className="text-2xl">🚀</span>
               </div>
             </Button>
             
