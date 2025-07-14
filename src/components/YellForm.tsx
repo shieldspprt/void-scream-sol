@@ -29,6 +29,48 @@ export const YellForm = ({ onSuccessfulPost }: YellFormProps) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const recordingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  const handleSubmitYell = async () => {
+    console.log('🔥 Submit button clicked!', { 
+      hasMessage: !!message.trim(), 
+      hasAudio: !!audioBlob, 
+      exType,
+      isSubmitting 
+    });
+
+    // Check if we have content and ex type
+    if (!message.trim() && !audioBlob) {
+      toast({
+        title: "❌ Empty scream",
+        description: "You need to write something or record audio first!",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!exType) {
+      toast({
+        title: "❌ Ex type required", 
+        description: "Please select what kind of disaster they were!",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const result = await submitYell('post', {
+      message,
+      exType,
+      audioBlob
+    });
+
+    if (result.success) {
+      // Show success confirmation
+      setShowSuccessModal(true);
+      
+      // Trigger wall refresh
+      onSuccessfulPost?.();
+    }
+  };
+
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
@@ -148,22 +190,6 @@ export const YellForm = ({ onSuccessfulPost }: YellFormProps) => {
       title: "🤖 AI Scream Generated",
       description: "Artificial intelligence meets authentic rage!",
     });
-  };
-
-  const handleSubmitYell = async () => {
-    const result = await submitYell('post', {
-      message,
-      exType,
-      audioBlob
-    });
-
-    if (result.success) {
-      // Show success confirmation
-      setShowSuccessModal(true);
-      
-      // Trigger wall refresh
-      onSuccessfulPost?.();
-    }
   };
 
   return (
@@ -316,7 +342,7 @@ export const YellForm = ({ onSuccessfulPost }: YellFormProps) => {
             <Button
               onClick={handleSubmitYell}
               disabled={isSubmitting || (!message.trim() && !audioBlob) || !exType}
-              className="w-full h-20 sm:h-16 bg-gradient-to-r from-destructive via-red-600 to-destructive text-white font-mono font-black text-xl sm:text-lg rounded-lg transform transition-all duration-200 hover:scale-[1.03] hover:shadow-2xl hover:shadow-destructive/60 active:scale-[0.97] disabled:opacity-50 disabled:hover:scale-100 relative overflow-hidden group border-2 border-destructive touch-manipulation"
+              className="w-full h-20 sm:h-16 bg-gradient-to-r from-destructive via-red-600 to-destructive text-white font-mono font-black text-2xl sm:text-xl rounded-lg transform transition-all duration-200 hover:scale-[1.03] hover:shadow-2xl hover:shadow-destructive/60 active:scale-[0.97] disabled:opacity-50 disabled:hover:scale-100 relative overflow-hidden group border-2 border-destructive touch-manipulation cursor-pointer"
             >
               {/* Animated background effect */}
               <div className="absolute inset-0 bg-gradient-to-r from-neon-pink via-yellow-400 to-neon-cyan opacity-0 group-hover:opacity-40 transition-opacity duration-200 animate-pulse" />
@@ -324,13 +350,13 @@ export const YellForm = ({ onSuccessfulPost }: YellFormProps) => {
               
               <div className="relative flex flex-col items-center gap-1 z-10">
                 <div className="flex items-center gap-3">
-                  <span className="text-2xl">💰</span>
-                  <span className="tracking-wider text-xl font-bold text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)] glow-text">
+                  <span className="text-3xl">💰</span>
+                  <span className="tracking-wider text-2xl font-black text-white drop-shadow-[0_0_12px_rgba(255,255,255,1)] glow-text">
                     {isSubmitting ? 'EARNING YLX...' : 'SCREAM TO GET 100 $YLX'}
                   </span>
-                  <span className="text-2xl">🚨</span>
+                  <span className="text-3xl">🚨</span>
                 </div>
-                <div className="text-sm opacity-90 font-normal">0.01 SOL • EARN 100 $YLX</div>
+                <div className="text-base opacity-90 font-normal">0.01 SOL • EARN 100 $YLX</div>
               </div>
             </Button>
             
