@@ -342,21 +342,26 @@ export const YellForm = ({ onSuccessfulPost }: YellFormProps) => {
             <Button
               onClick={handleSubmitYell}
               disabled={isSubmitting || (!message.trim() && !audioBlob) || !exType}
-              className="w-full h-20 sm:h-16 bg-gradient-to-r from-destructive via-red-600 to-destructive text-white font-mono font-black text-2xl sm:text-xl rounded-lg transform transition-all duration-200 hover:scale-[1.03] hover:shadow-2xl hover:shadow-destructive/60 active:scale-[0.97] disabled:opacity-50 disabled:hover:scale-100 relative overflow-hidden group border-2 border-destructive touch-manipulation cursor-pointer"
+              className="w-full h-24 sm:h-20 bg-gradient-to-br from-neon-pink via-neon-purple to-neon-cyan text-primary-foreground font-mono font-black text-2xl sm:text-xl rounded-xl transform transition-all duration-300 hover:scale-[1.05] hover:shadow-neon-glow active:scale-[0.95] disabled:opacity-50 disabled:hover:scale-100 relative overflow-hidden group border-4 border-neon-cyan/50 touch-manipulation cursor-pointer animate-pulse"
             >
-              {/* Animated background effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-neon-pink via-yellow-400 to-neon-cyan opacity-0 group-hover:opacity-40 transition-opacity duration-200 animate-pulse" />
-              <div className="absolute inset-0 bg-destructive/20 group-hover:bg-destructive/40 transition-colors duration-200" />
+              {/* Dynamic pulsing background */}
+              <div className="absolute inset-0 bg-gradient-to-r from-neon-cyan via-neon-pink to-yellow-400 opacity-60 group-hover:opacity-80 transition-opacity duration-300 animate-pulse" />
               
-              <div className="relative flex flex-col items-center gap-1 z-10">
-                <div className="flex items-center gap-3">
-                  <span className="text-3xl">💰</span>
-                  <span className="tracking-wider text-2xl font-black text-white drop-shadow-[0_0_12px_rgba(255,255,255,1)] glow-text">
+              {/* Animated scan lines */}
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/10 to-transparent animate-scan opacity-30" />
+              
+              {/* Glow effect border */}
+              <div className="absolute -inset-1 bg-gradient-to-r from-neon-pink via-neon-cyan to-neon-purple rounded-xl blur-sm opacity-75 group-hover:opacity-100 transition-opacity duration-300" />
+              
+              <div className="relative flex flex-col items-center gap-2 z-10 p-2">
+                <div className="flex items-center gap-4">
+                  <span className="text-4xl animate-bounce">💰</span>
+                  <span className="tracking-widest text-2xl sm:text-xl font-black text-white drop-shadow-[0_0_20px_rgba(0,255,255,1)] terminal-glow uppercase">
                     {isSubmitting ? 'EARNING YLX...' : 'SCREAM TO GET 100 $YLX'}
                   </span>
-                  <span className="text-3xl">🚨</span>
+                  <span className="text-4xl animate-bounce">🚀</span>
                 </div>
-                <div className="text-base opacity-90 font-normal">0.01 SOL • EARN 100 $YLX</div>
+                <div className="text-sm font-bold text-neon-cyan/90 tracking-wide uppercase">0.01 SOL → EARN 100 $YLX</div>
               </div>
             </Button>
             
