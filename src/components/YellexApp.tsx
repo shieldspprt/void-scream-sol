@@ -4,6 +4,7 @@ import { WalletConnector } from './WalletConnector';
 import { YellForm } from './YellForm';
 import { WallOfScreams } from './WallOfScreams';
 import { TopScreams } from './TopScreams';
+import JupiterSwapWidget from './JupiterSwapWidget';
 
 
 const YellexApp = () => {
@@ -42,6 +43,7 @@ const YellexApp = () => {
           {/* Left Pane - Posting/Recording (Always Visible) */}
           <div className="w-full lg:w-96 lg:min-w-96 lg:max-w-96 flex-shrink-0 overflow-y-auto space-y-6">
             <YellForm onSuccessfulPost={handleSuccessfulPost} />
+            <JupiterSwapWidget />
             <TopScreams refreshTrigger={refreshTrigger} />
           </div>
           
