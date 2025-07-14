@@ -1,250 +1,294 @@
+// Solana blockchain utilities for secure transaction handling with latest standards
 import { 
   Connection, 
-  PublicKey, 
   Transaction, 
+  VersionedTransaction,
+  TransactionMessage,
   SystemProgram, 
+  PublicKey, 
   LAMPORTS_PER_SOL,
   ComputeBudgetProgram,
-  TransactionMessage,
-  VersionedTransaction,
-  TransactionSignature
+  TransactionSignature,
+  AddressLookupTableAccount
 } from '@solana/web3.js';
+import { WalletContextState } from '@solana/wallet-adapter-react';
+import { 
+  RPC_ENDPOINTS,
+  RPC_ENDPOINT, 
+  YELLEX_TREASURY_WALLET, 
+  POST_PRICE_SOL, 
+  TRANSACTION_TIMEOUT_MS,
+  MAX_RETRIES 
+} from '@/config/constants';
 
-/**
- * Creates a connection to the Solana blockchain with optional RPC endpoint
- */
+// Create connection with RPC fallback logic for better reliability
 export const createConnection = (rpcEndpoint?: string): Connection => {
-  const endpoint = rpcEndpoint || 'https://api.mainnet-beta.solana.com';
+  const endpoint = rpcEndpoint || RPC_ENDPOINT;
   return new Connection(endpoint, {
     commitment: 'confirmed',
-    confirmTransactionInitialTimeout: 60000,
+    confirmTransactionInitialTimeout: TRANSACTION_TIMEOUT_MS,
+    wsEndpoint: undefined, // Disable websocket to avoid connection issues
+    disableRetryOnRateLimit: false,
+    httpHeaders: {
+      'Content-Type': 'application/json',
+    },
   });
 };
 
-/**
- * Creates a connection with fallback to alternative RPC endpoints
- */
+// Create connection with automatic RPC fallback
 export const createConnectionWithFallback = async (): Promise<Connection> => {
-  const rpcEndpoints = [
-    'https://api.mainnet-beta.solana.com',
-    'https://solana-api.projectserum.com',
-    'https://rpc.ankr.com/solana',
-    'https://mainnet.helius-rpc.com/?api-key=f7b7b1b0-7b7b-4b7b-8b7b-0b7b7b7b7b7b'
-  ];
-
-  for (const endpoint of rpcEndpoints) {
+  for (const rpcEndpoint of RPC_ENDPOINTS) {
     try {
-      const connection = createConnection(endpoint);
+      const connection = createConnection(rpcEndpoint);
+      // Test the connection by getting latest blockhash
       await connection.getLatestBlockhash('confirmed');
-      console.log(`✅ Connected to Solana via ${endpoint}`);
+      console.log(`Successfully connected to RPC: ${rpcEndpoint}`);
       return connection;
     } catch (error) {
-      console.warn(`❌ Failed to connect to ${endpoint}:`, error);
+      console.warn(`RPC ${rpcEndpoint} failed, trying next...`, error);
       continue;
     }
   }
-
-  // Fallback to default if all fail
-  console.warn('⚠️ All RPC endpoints failed, using default connection');
+  
+  // If all RPCs fail, return default connection as fallback
+  console.warn('All RPC endpoints failed, using default connection');
   return createConnection();
 };
 
-/**
- * Gets the current priority fee to improve transaction success rates
- */
+// Get current priority fee for better transaction success rate
 export const getPriorityFee = async (connection: Connection): Promise<number> => {
   try {
-    const feeInfo = await connection.getRecentPrioritizationFees();
-    if (feeInfo && feeInfo.length > 0) {
-      const avgFee = feeInfo.reduce((sum, fee) => sum + fee.prioritizationFee, 0) / feeInfo.length;
-      return Math.max(avgFee, 1000); // Minimum 1000 micro-lamports
+    // Get recent priority fees to determine optimal fee
+    const fees = await connection.getRecentPrioritizationFees();
+    if (fees && fees.length > 0) {
+      // Use 75th percentile of recent fees, minimum 1000 microlamports
+      const sortedFees = fees.map(f => f.prioritizationFee).sort((a, b) => a - b);
+      const percentile75 = sortedFees[Math.floor(sortedFees.length * 0.75)] || 0;
+      return Math.max(percentile75, 1000); // Minimum 1000 microlamports
     }
+    return 5000; // Default fallback: 5000 microlamports
   } catch (error) {
-    console.warn('Failed to get priority fee:', error);
+    console.warn('Failed to get priority fees, using default:', error);
+    return 5000; // Fallback priority fee
   }
-  return 5000; // Default fallback fee
 };
 
-/**
- * Validates wallet connection and transaction prerequisites
- */
+// Validate transaction before sending  
 export const validateTransaction = (
   publicKey: PublicKey | null,
   signTransaction: ((transaction: VersionedTransaction | Transaction) => Promise<VersionedTransaction | Transaction>) | undefined,
   connection: Connection
 ): { isValid: boolean; error?: string } => {
-  if (!publicKey) {
-    return { isValid: false, error: "Wallet not connected" };
-  }
-
-  if (!signTransaction) {
-    return { isValid: false, error: "Wallet does not support transaction signing" };
+  if (!publicKey || !signTransaction) {
+    return { isValid: false, error: 'Wallet not connected properly' };
   }
 
   if (!connection) {
-    return { isValid: false, error: "No connection to Solana network" };
+    return { isValid: false, error: 'No connection to Solana network' };
   }
 
   return { isValid: true };
 };
 
-/**
- * Creates a payment transaction for the platform
- * Only handles SOL payment - YLX rewards are processed by backend for security
- */
+// Create modern versioned transaction with priority fees and compute units
 export const createPaymentTransaction = async (
-  publicKey: PublicKey, 
+  publicKey: PublicKey,
   connection: Connection
 ): Promise<{ transaction: VersionedTransaction; error?: string }> => {
-  const transaction = new Transaction();
-  
   try {
-    const balance = await connection.getBalance(publicKey);
-    const solBalance = balance / LAMPORTS_PER_SOL;
+    console.log('💰 Creating payment transaction...', { wallet: publicKey.toString() });
     
-    if (solBalance < 0.01) {
-      return { 
-        transaction: transaction as any, 
-        error: "Insufficient SOL balance. You need at least 0.01 SOL to post." 
-      };
+    const recipientPubkey = new PublicKey(YELLEX_TREASURY_WALLET);
+    const lamports = POST_PRICE_SOL * LAMPORTS_PER_SOL;
+
+    console.log('💸 Transaction details:', { 
+      recipient: YELLEX_TREASURY_WALLET, 
+      amount: POST_PRICE_SOL, 
+      lamports 
+    });
+
+    // Check wallet balance with retry logic
+    console.log('🔍 Checking wallet balance...');
+    const { balance: balanceResult, error: balanceError } = await getWalletBalance(publicKey, connection);
+    if (balanceError) {
+      throw new Error(`Failed to check balance: ${balanceError}`);
+    }
+    
+    const balance = balanceResult! * LAMPORTS_PER_SOL;
+    
+    // Get dynamic priority fee from Helius API for optimal transaction success
+    let priorityFee = 30000; // Default fallback
+    try {
+      const response = await fetch(RPC_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 'priority-fee',
+          method: 'getPriorityFeeEstimate',
+          params: [{
+            accountKeys: [publicKey.toString(), recipientPubkey.toString()],
+            options: { priorityLevel: 'high' }
+          }]
+        })
+      });
+      const data = await response.json();
+      if (data.result?.priorityFeeEstimate) {
+        priorityFee = Math.min(Math.max(data.result.priorityFeeEstimate, 20000), 200000);
+        console.log('🚀 Dynamic priority fee from Helius:', priorityFee);
+      }
+    } catch (e) {
+      console.log('⚠️ Using fallback priority fee:', priorityFee);
+    }
+    
+    // More accurate fee estimation including priority fees
+    const requiredBalance = lamports + 50000 + priorityFee; // Increased buffer for priority fees
+    
+    if (balance < requiredBalance) {
+      throw new Error(`Insufficient balance. Required: ${requiredBalance / LAMPORTS_PER_SOL} SOL, Available: ${balance / LAMPORTS_PER_SOL} SOL`);
     }
 
-    const priorityFee = await getPriorityFee(connection);
-    
-    const transferInstruction = SystemProgram.transfer({
-      fromPubkey: publicKey,
-      toPubkey: new PublicKey("AEdNLi8aoj9HWgogEEgMyHm9yzisvBcFfWRWVmtCTDK7"),
-      lamports: 0.01 * LAMPORTS_PER_SOL,
-    });
+    // Get recent blockhash with confirmed commitment for faster processing
+    const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed');
 
-    const computeBudgetIx = ComputeBudgetProgram.setComputeUnitPrice({
-      microLamports: priorityFee,
-    });
+    // Create instructions with optimized priority fee and compute limit
+    const instructions = [
+      // Set compute unit limit (simple transfer needs ~300 CU, we set 300000 for safety with complex operations)
+      ComputeBudgetProgram.setComputeUnitLimit({
+        units: 300000,
+      }),
+      // Set priority fee in microlamports per compute unit (optimized for high success rate)
+      ComputeBudgetProgram.setComputeUnitPrice({
+        microLamports: priorityFee,
+      }),
+      // The actual transfer instruction
+      SystemProgram.transfer({
+        fromPubkey: publicKey,
+        toPubkey: recipientPubkey,
+        lamports,
+      })
+    ];
 
-    const computeLimitIx = ComputeBudgetProgram.setComputeUnitLimit({
-      units: 400_000,
-    });
-
-    transaction.add(computeBudgetIx);
-    transaction.add(computeLimitIx);
-    transaction.add(transferInstruction);
-
-    const latestBlockhash = await connection.getLatestBlockhash();
-    transaction.recentBlockhash = latestBlockhash.blockhash;
-    transaction.feePayer = publicKey;
-
-    // Convert to VersionedTransaction
-    const message = new TransactionMessage({
+    // Create versioned transaction with v0 message
+    const messageV0 = new TransactionMessage({
       payerKey: publicKey,
-      recentBlockhash: latestBlockhash.blockhash,
-      instructions: transaction.instructions,
+      recentBlockhash: blockhash,
+      instructions,
     }).compileToV0Message();
 
-    const versionedTransaction = new VersionedTransaction(message);
+    const transaction = new VersionedTransaction(messageV0);
 
-    return { transaction: versionedTransaction };
-  } catch (error) {
-    console.error("Error creating payment transaction:", error);
+    return { transaction };
+  } catch (error: any) {
+    console.error('Transaction creation error:', error);
     return { 
-      transaction: transaction as any, 
-      error: error instanceof Error ? error.message : "Failed to create transaction" 
+      transaction: new VersionedTransaction(new TransactionMessage({
+        payerKey: publicKey,
+        recentBlockhash: '',
+        instructions: [],
+      }).compileToV0Message()), 
+      error: error.message || 'Failed to create transaction' 
     };
   }
 };
 
-/**
- * Sends a signed transaction with retry logic and improved error handling
- */
+// Send versioned transaction with retry logic and proper error handling
 export const sendTransactionWithRetry = async (
   signedTransaction: VersionedTransaction,
   connection: Connection
 ): Promise<{ signature?: TransactionSignature; error?: string }> => {
-  const maxRetries = 3;
   let lastError: Error | null = null;
 
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
-      console.log(`🔄 Transaction attempt ${attempt}/${maxRetries}`);
+      console.log(`📡 Attempt ${attempt}: Sending transaction to network...`);
       
-      // Get fresh blockhash for retry attempts
-      if (attempt > 1) {
-        const latestBlockhash = await connection.getLatestBlockhash('confirmed');
-        signedTransaction.message.recentBlockhash = latestBlockhash.blockhash;
-      }
+      const signature = await connection.sendRawTransaction(
+        signedTransaction.serialize(),
+        {
+          skipPreflight: false,
+          preflightCommitment: 'confirmed',
+          maxRetries: 0, // Handle retries manually
+        }
+      );
+      
+      console.log('✅ Transaction sent successfully, signature:', signature);
 
-      const signature = await connection.sendRawTransaction(signedTransaction.serialize(), {
-        skipPreflight: false,
-        preflightCommitment: 'confirmed',
-        maxRetries: 0,
-      });
-
-      console.log(`📡 Transaction sent: ${signature}`);
-
-      // Confirm transaction
-      const confirmation = await connection.confirmTransaction({
+      // Wait for confirmation with better timeout handling
+      const latestBlockhash = await connection.getLatestBlockhash('confirmed');
+      await connection.confirmTransaction({
         signature,
-        blockhash: signedTransaction.message.recentBlockhash,
-        lastValidBlockHeight: (await connection.getLatestBlockhash()).lastValidBlockHeight,
+        blockhash: latestBlockhash.blockhash,
+        lastValidBlockHeight: latestBlockhash.lastValidBlockHeight
       }, 'confirmed');
 
-      if (confirmation.value.err) {
-        throw new Error(`Transaction failed: ${confirmation.value.err}`);
-      }
-
-      console.log(`✅ Transaction confirmed: ${signature}`);
       return { signature };
-
     } catch (error: any) {
       lastError = error;
-      console.warn(`❌ Transaction attempt ${attempt} failed:`, error.message);
+      console.warn(`Transaction attempt ${attempt} failed:`, error.message);
       
-      // Don't retry certain errors
-      if (error.message?.includes('User rejected') || 
-          error.message?.includes('insufficient funds') ||
-          error.message?.includes('Signature verification failed')) {
+      // Don't retry on certain errors
+      if (error.message?.includes('insufficient funds') || 
+          error.message?.includes('blockhash not found') ||
+          error.message?.includes('BlockhashNotFound')) {
         break;
       }
-      
-      // Wait before retry (except on last attempt)
-      if (attempt < maxRetries) {
+
+      // Wait before retry (exponential backoff)
+      if (attempt < MAX_RETRIES) {
         await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
       }
     }
   }
 
   return { 
-    error: lastError?.message || "Transaction failed after retries" 
+    error: lastError?.message || 'Transaction failed after multiple attempts' 
   };
 };
 
-/**
- * Gets wallet balance with retry logic
- */
+// Get wallet balance safely with retry logic
 export const getWalletBalance = async (
   publicKey: PublicKey,
   connection: Connection
 ): Promise<{ balance?: number; error?: string }> => {
-  try {
-    const balance = await connection.getBalance(publicKey);
-    return { balance: balance / LAMPORTS_PER_SOL };
-  } catch (error) {
-    console.error('Failed to get wallet balance:', error);
-    return { error: 'Failed to check balance' };
+  let lastError: Error | null = null;
+  
+  // Retry up to 3 times for balance check
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const balance = await connection.getBalance(publicKey, 'confirmed');
+      return { balance: balance / LAMPORTS_PER_SOL };
+    } catch (error: any) {
+      lastError = error;
+      console.warn(`Balance check attempt ${attempt} failed:`, error.message);
+      
+      // Wait before retry (exponential backoff)
+      if (attempt < 3) {
+        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+      }
+    }
   }
+  
+  return { error: lastError?.message || 'Failed to get wallet balance after multiple attempts' };
 };
 
-/**
- * Estimates transaction fee
- */
+// Estimate transaction fee
 export const estimateTransactionFee = async (
   transaction: Transaction,
   connection: Connection
 ): Promise<{ fee?: number; error?: string }> => {
   try {
-    const fee = await connection.getFeeForMessage(transaction.compileMessage());
-    return { fee: fee ? fee.value / LAMPORTS_PER_SOL : undefined };
-  } catch (error) {
-    console.error('Failed to estimate transaction fee:', error);
-    return { error: 'Failed to estimate fee' };
+    const feeCalculator = await connection.getFeeForMessage(
+      transaction.compileMessage(),
+      'confirmed'
+    );
+    
+    if (feeCalculator.value === null) {
+      throw new Error('Unable to calculate transaction fee');
+    }
+
+    return { fee: feeCalculator.value / LAMPORTS_PER_SOL };
+  } catch (error: any) {
+    return { error: error.message || 'Failed to estimate transaction fee' };
   }
 };

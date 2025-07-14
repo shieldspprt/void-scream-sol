@@ -105,7 +105,7 @@ export const useYellSubmission = () => {
           throw new Error(transactionValidation.error);
         }
 
-        // Create payment transaction (YLX will be handled by backend)
+        // Create payment transaction
         const { transaction, error: txError } = await createPaymentTransaction(
           publicKey,
           workingConnection

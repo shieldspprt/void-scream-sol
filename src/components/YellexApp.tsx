@@ -4,7 +4,6 @@ import { WalletConnector } from './WalletConnector';
 import { YellForm } from './YellForm';
 import { WallOfScreams } from './WallOfScreams';
 import { TopScreams } from './TopScreams';
-import JupiterSwapWidget from './JupiterSwapWidget';
 
 
 const YellexApp = () => {
@@ -47,8 +46,7 @@ const YellexApp = () => {
           </div>
           
           {/* Right Pane - Wall of Screams (Scrollable) */}
-          <div className="flex-1 min-w-0 overflow-y-auto space-y-6">
-            <JupiterSwapWidget />
+          <div className="flex-1 min-w-0 overflow-y-auto">
             <WallOfScreams refreshTrigger={refreshTrigger} />
           </div>
         </main>
