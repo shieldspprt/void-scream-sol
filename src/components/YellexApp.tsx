@@ -43,12 +43,12 @@ const YellexApp = () => {
           {/* Left Pane - Posting/Recording (Always Visible) */}
           <div className="w-full lg:w-96 lg:min-w-96 lg:max-w-96 flex-shrink-0 overflow-y-auto space-y-6">
             <YellForm onSuccessfulPost={handleSuccessfulPost} />
-            <JupiterSwapWidget />
             <TopScreams refreshTrigger={refreshTrigger} />
           </div>
           
           {/* Right Pane - Wall of Screams (Scrollable) */}
-          <div className="flex-1 min-w-0 overflow-y-auto">
+          <div className="flex-1 min-w-0 overflow-y-auto space-y-6">
+            <JupiterSwapWidget />
             <WallOfScreams refreshTrigger={refreshTrigger} />
           </div>
         </main>
