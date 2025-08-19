@@ -15,6 +15,8 @@ interface Scream {
   has_audio: boolean;
   audio_data: string | null;
   likes: number;
+  is_ai_generated?: boolean;
+  ai_prompt_category?: string;
 }
 
 interface WallOfScreamsProps {
@@ -57,7 +59,7 @@ export const WallOfScreams = ({ refreshTrigger }: WallOfScreamsProps) => {
       // Only select non-sensitive fields to protect user privacy
       let query = supabase
         .from('screams')
-        .select('id, message, ex_type, created_at, has_audio, audio_data, likes, ylx_tokens_rewarded, updated_at, action')
+        .select('id, message, ex_type, created_at, has_audio, audio_data, likes, ylx_tokens_rewarded, updated_at, action, is_ai_generated, ai_prompt_category')
         .eq('action', 'post');
 
       // Apply sorting
@@ -261,12 +263,17 @@ export const WallOfScreams = ({ refreshTrigger }: WallOfScreamsProps) => {
                       {scream.ex_type}
                     </Badge>
                   )}
+                  {scream.is_ai_generated && (
+                    <Badge variant="outline" className="terminal-window text-neon-cyan border-neon-cyan font-mono bg-neon-cyan/5">
+                      🤖 AI
+                    </Badge>
+                  )}
                   <span className="text-xs text-muted-foreground font-mono">
                     {formatTimeAgo(scream.created_at)}
                   </span>
                 </div>
                 <div className="text-xs text-muted-foreground font-mono">
-                  anonymous_user_{scream.id.slice(-6)}
+                  {scream.is_ai_generated ? 'AI_SYSTEM_BOT' : `anonymous_user_${scream.id.slice(-6)}`}
                 </div>
               </div>
 
