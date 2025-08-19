@@ -7,9 +7,9 @@ import { clusterApiUrl } from '@solana/web3.js';
 // Network Configuration - Multiple free mainnet RPCs for fallback
 export const NETWORK = WalletAdapterNetwork.Mainnet;
 
-// Helius RPC Configuration (Primary)
-export const HELIUS_API_KEY = 'ed5f15e1-73d1-45a4-9d5c-e905104f37ec';
-export const HELIUS_RPC_ENDPOINT = `https://mainnet.helius-rpc.com/?api-key=${HELIUS_API_KEY}`;
+// Helius RPC Configuration (Primary) - API key now secured in backend
+// Use backend proxy for RPC calls requiring API keys
+export const HELIUS_RPC_ENDPOINT = 'https://mainnet.helius-rpc.com'; // Will be proxied through backend
 
 // Multiple Solana mainnet RPC endpoints for better reliability (with Helius as primary)
 export const RPC_ENDPOINTS = [
@@ -26,10 +26,9 @@ export const RPC_ENDPOINT = RPC_ENDPOINTS[0]; // Default to Helius
 export const YELLEX_TREASURY_WALLET = 'BMgz5grWtsgHsoPnrczXZdhDgT3wBSufNjyYU5jFyFrs';
 export const POST_PRICE_SOL = 0.01;
 
-// $YLX Token Configuration
-export const YLX_TOKEN_MINT = 'YOUR_YLX_TOKEN_MINT_ADDRESS'; // Replace with actual mint address
-export const YLX_REWARD_AMOUNT = 100;
-export const YLX_TOKEN_DECIMALS = 6; // Replace with actual decimals (usually 6 or 9)
+// $YLX Token Configuration - Now secured in Supabase secrets
+// These will be loaded from backend for security
+export const YLX_REWARD_AMOUNT = 100; // Default amount, actual from secrets
 
 // App Configuration
 export const MAX_MESSAGE_LENGTH = 280;

@@ -54,9 +54,10 @@ export const WallOfScreams = ({ refreshTrigger }: WallOfScreamsProps) => {
 
   const fetchScreams = async () => {
     try {
+      // Only select non-sensitive fields to protect user privacy
       let query = supabase
         .from('screams')
-        .select('*')
+        .select('id, message, ex_type, created_at, has_audio, audio_data, likes, ylx_tokens_rewarded, updated_at, action')
         .eq('action', 'post');
 
       // Apply sorting
