@@ -64,45 +64,7 @@ export type Database = {
       }
     }
     Views: {
-      public_screams: {
-        Row: {
-          action: string | null
-          audio_data: string | null
-          created_at: string | null
-          ex_type: string | null
-          has_audio: boolean | null
-          id: string | null
-          likes: number | null
-          message: string | null
-          updated_at: string | null
-          ylx_tokens_rewarded: boolean | null
-        }
-        Insert: {
-          action?: string | null
-          audio_data?: string | null
-          created_at?: string | null
-          ex_type?: string | null
-          has_audio?: boolean | null
-          id?: string | null
-          likes?: number | null
-          message?: string | null
-          updated_at?: string | null
-          ylx_tokens_rewarded?: boolean | null
-        }
-        Update: {
-          action?: string | null
-          audio_data?: string | null
-          created_at?: string | null
-          ex_type?: string | null
-          has_audio?: boolean | null
-          id?: string | null
-          likes?: number | null
-          message?: string | null
-          updated_at?: string | null
-          ylx_tokens_rewarded?: boolean | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       [_ in never]: never
