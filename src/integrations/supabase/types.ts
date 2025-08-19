@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -64,7 +64,45 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_screams: {
+        Row: {
+          action: string | null
+          audio_data: string | null
+          created_at: string | null
+          ex_type: string | null
+          has_audio: boolean | null
+          id: string | null
+          likes: number | null
+          message: string | null
+          updated_at: string | null
+          ylx_tokens_rewarded: boolean | null
+        }
+        Insert: {
+          action?: string | null
+          audio_data?: string | null
+          created_at?: string | null
+          ex_type?: string | null
+          has_audio?: boolean | null
+          id?: string | null
+          likes?: number | null
+          message?: string | null
+          updated_at?: string | null
+          ylx_tokens_rewarded?: boolean | null
+        }
+        Update: {
+          action?: string | null
+          audio_data?: string | null
+          created_at?: string | null
+          ex_type?: string | null
+          has_audio?: boolean | null
+          id?: string | null
+          likes?: number | null
+          message?: string | null
+          updated_at?: string | null
+          ylx_tokens_rewarded?: boolean | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never
