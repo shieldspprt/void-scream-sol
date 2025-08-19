@@ -67,3 +67,9 @@ enable_confirmations = false
 # Edge Functions
 [functions.reward-ylx-tokens]
 verify_jwt = false
+
+[functions.generate-hilarious-screams]
+verify_jwt = false
+
+[functions.auto-post-screams]
+verify_jwt = false
