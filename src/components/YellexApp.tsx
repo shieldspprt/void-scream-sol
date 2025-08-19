@@ -4,13 +4,41 @@ import { WalletConnector } from './WalletConnector';
 import { YellForm } from './YellForm';
 import { WallOfScreams } from './WallOfScreams';
 import { TopScreams } from './TopScreams';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 
 const YellexApp = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [posting, setPosting] = useState(false);
+  const { toast } = useToast();
 
   const handleSuccessfulPost = () => {
     setRefreshTrigger(prev => prev + 1);
+  };
+
+  const handleTriggerAIPost = async () => {
+    try {
+      setPosting(true);
+      const { data, error } = await supabase.functions.invoke('auto-post-screams', {
+        body: { trigger: 'manual_test' }
+      });
+      if (error) throw error;
+      toast({
+        title: 'AI scream posted',
+        description: `Posted ${data?.screams?.length ?? 0} AI scream(s).`
+      });
+      setRefreshTrigger(prev => prev + 1);
+    } catch (e: any) {
+      toast({
+        title: 'Failed to post AI scream',
+        description: e.message,
+        variant: 'destructive' as any
+      });
+    } finally {
+      setPosting(false);
+    }
   };
 
   return (
@@ -33,7 +61,18 @@ const YellexApp = () => {
                 &gt; scream_into_void.exe
               </div>
             </div>
-            <WalletConnector />
+            <div className="flex items-center gap-2">
+              <WalletConnector />
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleTriggerAIPost}
+                disabled={posting}
+                aria-label="Trigger AI scream now"
+              >
+                {posting ? 'Posting…' : 'Trigger AI Scream'}
+              </Button>
+            </div>
           </div>
         </header>
 
