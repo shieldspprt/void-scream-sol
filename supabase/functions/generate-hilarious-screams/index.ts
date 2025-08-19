@@ -8,46 +8,85 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Hilarious scream categories and prompts
 const SCREAM_CATEGORIES = {
-  'crypto_breakup': {
-    personas: ['Crypto Karen', 'DeFi Chad', 'NFT Maximalist', 'Yield Farmer Sarah'],
+  crypto_breakup: {
+    personas: ['Crypto Ex-Boyfriend', 'DeFi Disaster Dan', 'Rugpull Rachel', 'NFT Heartbreak Hannah', 'Yield Farm Yolanda'],
     prompts: [
-      "Write a hilarious breakup scream from someone who got dumped because their ex said they love crypto more than them. Make it dramatic and crypto-themed.",
-      "Create a funny ex-lover scream about someone who broke up with their partner after losing all their money in a rug pull.",
-      "Write a dramatic scream about getting dumped because they spent the vacation money on Dogecoin."
+      'Write about crypto destroying a relationship and causing emotional chaos',
+      'Express the pain of losing money and love simultaneously in crypto',
+      'Rant about a partner who chose DeFi over romance',
+      'Scream about discovering your ex sold your shared NFTs',
+      'Vent about a breakup caused by different crypto investment strategies'
     ]
   },
-  'dao_drama': {
-    personas: ['DAO Founder Alex', 'Governance Token Holder', 'Smart Contract Dev'],
+  dao_drama: {
+    personas: ['DAO Founder Alex', 'Governance Token Gary', 'Smart Contract Dev', 'Community Manager Casey', 'Discord Moderator Mike'],
     prompts: [
-      "Write a hilarious scream about DAO governance drama where someone's proposal got rejected by 0.1%.",
-      "Create a funny business partner betrayal scream about a co-founder who voted against their own team.",
-      "Write a dramatic scream about getting kicked out of a DAO for proposing to spend treasury on a company retreat."
+      'Complain about DAO governance politics and voting drama',
+      'Rant about community infighting over protocol changes',
+      'Express frustration with whale voters controlling decisions',
+      'Scream about being voted out of your own DAO',
+      'Vent about endless Discord arguments and proposal spam'
     ]
   },
-  'defi_disasters': {
-    personas: ['Yield Farmer Mike', 'Liquidity Provider Lisa', 'DeFi Degen'],
+  nft_nightmares: {
+    personas: ['JPEG Collector Jamie', 'OpenSea Ollie', 'Mint Disaster Mia', 'Floor Price Frank', 'Royalty Rights Rita'],
     prompts: [
-      "Write a hilarious scream about providing liquidity and getting rekt by impermanent loss.",
-      "Create a funny scream about someone who got liquidated right before their favorite token pumped 10x.",
-      "Write a dramatic scream about missing out on a 1000% APY farm because the gas fees were too high."
+      'Rage about NFT floor prices crashing overnight',
+      'Express horror at discovering your rare NFT is now worthless',
+      'Rant about gas wars during mint events',
+      'Scream about failed NFT marketplace transactions',
+      'Vent about creators abandoning their NFT projects'
     ]
   },
-  'nft_collector_rage': {
-    personas: ['NFT Collector Jenny', 'OpenSea Flipper', 'PFP Enthusiast'],
+  defi_disasters: {
+    personas: ['Liquidity Pool Larry', 'Impermanent Loss Lisa', 'Yield Farmer Yuki', 'Flash Loan Felix', 'Sandwich Attack Sam'],
     prompts: [
-      "Write a hilarious scream about buying an NFT for 5 ETH and watching it drop to 0.001 ETH overnight.",
-      "Create a funny betrayal scream about a friend who minted the same NFT collection they were saving up for.",
-      "Write a dramatic scream about getting outbid by 0.01 ETH on their dream NFT."
+      'Cry about impermanent loss eating your profits',
+      'Rage about being sandwiched by MEV bots',
+      'Express panic about smart contract exploits',
+      'Scream about yield farming rewards disappearing',
+      'Vent about complex DeFi protocols draining your wallet'
     ]
   },
-  'web3_dating': {
-    personas: ['Crypto Twitter User', 'Web3 Developer', 'Blockchain Influencer'],
+  web3_woes: {
+    personas: ['Metaverse Max', 'Web3 Warrior Wendy', 'Blockchain Builder Bob', 'Crypto Karen', 'Decentralized Dan'],
     prompts: [
-      "Write a hilarious dating horror story scream about someone who only talked about their NFT collection on a first date.",
-      "Create a funny scream about getting ghosted after sending someone their wallet address instead of their phone number.",
-      "Write a dramatic scream about a date who turned out to be a Bitcoin maxi and wouldn't stop explaining why altcoins are scams."
+      'Complain about Web3 promises vs reality disappointments',
+      'Rant about overhyped metaverse experiences',
+      'Express frustration with slow blockchain transactions',
+      'Scream about wallet connection failures',
+      'Vent about the complexity of using dApps'
+    ]
+  },
+  trading_trauma: {
+    personas: ['Degen Trader Tyler', 'Paper Hands Paula', 'Diamond Hands Diana', 'Leverage Larry', 'FOMO Frances'],
+    prompts: [
+      'Rage about perfectly timed bad trades',
+      'Express regret about selling before massive pumps',
+      'Scream about getting liquidated on leverage',
+      'Vent about FOMO buying at the top',
+      'Cry about losing life savings to meme coins'
+    ]
+  },
+  gas_fee_fury: {
+    personas: ['Gas Fee Greg', 'Transaction Tim', 'Network Nancy', 'Ethereum Eddie', 'L2 Solution Sally'],
+    prompts: [
+      'Rage about absurd gas fees for simple transactions',
+      'Express shock at paying more in fees than the actual transaction',
+      'Scream about failed transactions that still cost gas',
+      'Vent about network congestion during important trades',
+      'Cry about being priced out by high gas costs'
+    ]
+  },
+  influencer_insanity: {
+    personas: ['Crypto Influencer Ian', 'YouTube Yasmin', 'Twitter Trendy Tom', 'TikTok Trader Tina', 'Podcast Paul'],
+    prompts: [
+      'Rant about following bad crypto advice from influencers',
+      'Express anger at influencers pumping and dumping',
+      'Scream about sponsored content leading to losses',
+      'Vent about fake trading results and lifestyle flexing',
+      'Cry about trusting social media financial advice'
     ]
   }
 };
@@ -80,25 +119,37 @@ serve(async (req) => {
     
     for (let i = 0; i < Math.min(count, 5); i++) {
       // Select random persona and prompt
-      const persona = categoryData.personas[Math.floor(Math.random() * categoryData.personas.length)];
-      const prompt = categoryData.prompts[Math.floor(Math.random() * categoryData.prompts.length)];
+      const selectedPersona = categoryData.personas[Math.floor(Math.random() * categoryData.personas.length)];
+      const selectedPrompt = categoryData.prompts[Math.floor(Math.random() * categoryData.prompts.length)];
       
-      const systemPrompt = `You are ${persona}, a hilarious and dramatic character in the crypto/web3 space. 
-      
-      Generate an EXTREMELY SHORT, hilarious, and shareable scream (max 280 characters) that sounds authentic and relatable to the crypto community.
-      
-      Rules:
-      - Keep it under 280 characters (Twitter/X length)
-      - Use crypto slang and terminology naturally
-      - Make it dramatic but funny
-      - Include relevant emojis
-      - Make it shareable and meme-worthy
-      - NO hashtags
-      - Focus on the emotional drama, not technical details
-      
-      The scream should sound like something someone would actually post when they're frustrated/angry.`;
+      console.log(`🎭 Generating scream for persona: ${selectedPersona}, category: ${selectedCategory}`);
 
-      console.log(`🎭 Generating scream for persona: ${persona}, category: ${selectedCategory}`);
+      const systemPrompt = `You are ${selectedPersona}, a dramatic and hilarious character in the crypto/Web3 space. 
+
+CRITICAL REQUIREMENTS:
+- Write a single, raw scream/rant under 280 characters
+- Be extremely creative and unique - avoid repetitive patterns
+- Mix humor with genuine frustration
+- Use varied emotional expressions (🚨🤯💔😱🔥💸🎭👻⚡️🌪️💀🎪🎢)
+- Include diverse crypto slang and scenarios
+- Make it feel authentic and personal
+- NO quotation marks, NO explanations, just the raw scream
+- Vary sentence structure and pacing dramatically
+- Reference specific crypto events, tokens, or situations randomly
+- Use different tones: angry, sad, confused, panicked, dramatic, sarcastic
+
+STYLE VARIETY:
+- Sometimes use ALL CAPS for emphasis
+- Sometimes use lowercase for despair  
+- Mix short punchy sentences with longer rants
+- Include random crypto terms: rugpull, ape, moon, diamond hands, paper hands, HODL, rekt, fren, gm, wagmi, ngmi, ser, alpha, copium, hopium
+- Reference popular chains: Ethereum, Solana, Polygon, Avalanche, BSC
+- Mention random tokens or projects (real or fictional)
+- Include trading terminology: leverage, liquidation, margin, futures, spot, CEX, DEX
+
+Make each scream completely different in style, emotion, and content. Be wildly creative!`;
+
+      const userPrompt = selectedPrompt;
 
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -107,13 +158,13 @@ serve(async (req) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'gpt-4o-mini',
+          model: 'gpt-5-2025-08-07',
           messages: [
             { role: 'system', content: systemPrompt },
-            { role: 'user', content: prompt }
+            { role: 'user', content: userPrompt }
           ],
-          max_tokens: 100,
-          temperature: 0.9,
+          max_completion_tokens: 120,
+          temperature: 1.2,
         }),
       });
 
@@ -137,7 +188,7 @@ serve(async (req) => {
       screams.push({
         message: cleanScream,
         category: selectedCategory,
-        persona: persona,
+        persona: selectedPersona,
         ex_type: getRandomExType(selectedCategory),
         length: cleanScream.length
       });
@@ -165,11 +216,14 @@ serve(async (req) => {
 
 function getRandomExType(category: string): string {
   const exTypes = {
-    'crypto_breakup': ['Ex-Lover', 'Ex-Boyfriend', 'Ex-Girlfriend'],
-    'dao_drama': ['Business Partner', 'Co-Founder', 'Team Member'],
-    'defi_disasters': ['Friend', 'Trading Partner', 'Advisor'],
-    'nft_collector_rage': ['Friend', 'Fellow Collector', 'Discord Buddy'],
-    'web3_dating': ['Date', 'Match', 'Crush']
+    'crypto_breakup': ['Ex-Lover', 'Ex-Boyfriend', 'Ex-Girlfriend', 'Former Partner', 'Ex-Fiance'],
+    'dao_drama': ['Business Partner', 'Co-Founder', 'Team Member', 'Colleague', 'Advisor'],
+    'nft_nightmares': ['Friend', 'Fellow Collector', 'Discord Buddy', 'Trading Partner', 'Artist'],
+    'defi_disasters': ['Friend', 'Trading Partner', 'Advisor', 'Mentor', 'Pool Partner'],
+    'web3_woes': ['Developer Friend', 'Community Member', 'Beta Tester', 'Early Adopter', 'Tech Buddy'],
+    'trading_trauma': ['Trading Buddy', 'Signal Provider', 'Mentor', 'Fellow Degen', 'Investment Partner'],
+    'gas_fee_fury': ['Network User', 'Fellow Trader', 'DeFi Friend', 'Transaction Partner', 'Gas Victim'],
+    'influencer_insanity': ['Follower', 'Subscriber', 'Fan', 'Course Student', 'Community Member']
   };
   
   const types = exTypes[category as keyof typeof exTypes] || ['Friend', 'Acquaintance', 'Someone'];
