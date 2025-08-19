@@ -17,11 +17,13 @@ export type Database = {
       screams: {
         Row: {
           action: string
+          ai_prompt_category: string | null
           audio_data: string | null
           created_at: string
           ex_type: string | null
           has_audio: boolean | null
           id: string
+          is_ai_generated: boolean | null
           likes: number | null
           message: string | null
           transaction_signature: string | null
@@ -32,11 +34,13 @@ export type Database = {
         }
         Insert: {
           action: string
+          ai_prompt_category?: string | null
           audio_data?: string | null
           created_at?: string
           ex_type?: string | null
           has_audio?: boolean | null
           id?: string
+          is_ai_generated?: boolean | null
           likes?: number | null
           message?: string | null
           transaction_signature?: string | null
@@ -47,11 +51,13 @@ export type Database = {
         }
         Update: {
           action?: string
+          ai_prompt_category?: string | null
           audio_data?: string | null
           created_at?: string
           ex_type?: string | null
           has_audio?: boolean | null
           id?: string
+          is_ai_generated?: boolean | null
           likes?: number | null
           message?: string | null
           transaction_signature?: string | null
@@ -67,7 +73,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_system_wallet_address: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
