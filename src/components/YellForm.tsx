@@ -253,9 +253,9 @@ export const YellForm = ({ onSuccessfulPost }: YellFormProps) => {
                   </label>
                   <Button
                     onClick={generateAiScream}
-                    variant="outline"
+                    variant="secondary"
                     size="sm"
-                    className="btn-glitch h-8"
+                    className="btn-glitch h-8 bg-secondary text-secondary-foreground border-2 border-secondary opacity-100"
                   >
                     <Sparkles className="h-3 w-3 mr-1" />
                     AI
