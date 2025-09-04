@@ -184,9 +184,9 @@ export const WallOfScreams = ({ refreshTrigger }: WallOfScreamsProps) => {
               </h2>
               <Button 
                 onClick={fetchScreams}
-                variant="outline" 
+                variant="secondary" 
                 size="sm"
-                className="btn-neon font-mono h-8 px-3 text-xs animate-none hover:animate-spin transition-all duration-300"
+                className="btn-neon font-mono h-8 px-3 text-xs bg-primary text-primary-foreground border-2 border-primary opacity-100 animate-none hover:animate-spin transition-all duration-300"
                 disabled={loading}
               >
                 🔄 {loading ? 'LOADING' : 'REFRESH'}
