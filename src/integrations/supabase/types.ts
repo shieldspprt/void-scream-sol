@@ -73,6 +73,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_public_screams: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          action: string
+          ai_prompt_category: string
+          audio_data: string
+          created_at: string
+          ex_type: string
+          has_audio: boolean
+          id: string
+          is_ai_generated: boolean
+          likes: number
+          message: string
+          updated_at: string
+        }[]
+      }
       get_system_wallet_address: {
         Args: Record<PropertyKey, never>
         Returns: string

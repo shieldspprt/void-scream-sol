@@ -56,32 +56,27 @@ export const WallOfScreams = ({ refreshTrigger }: WallOfScreamsProps) => {
 
   const fetchScreams = async () => {
     try {
-      // Only select non-sensitive fields to protect user privacy
-      let query = supabase
-        .from('screams')
-        .select('id, message, ex_type, created_at, has_audio, audio_data, likes, ylx_tokens_rewarded, updated_at, action, is_ai_generated, ai_prompt_category')
-        .eq('action', 'post');
-
-      // Apply sorting
-      switch (sortBy) {
-        case 'newest':
-          query = query.order('created_at', { ascending: false });
-          break;
-        case 'top-liked':
-          query = query.order('likes', { ascending: false });
-          break;
-        case 'top-shared':
-          // For now, use likes as a proxy for shares until we implement share tracking
-          query = query.order('likes', { ascending: false });
-          break;
-        default:
-          query = query.order('created_at', { ascending: false });
-      }
-
-      const { data, error } = await query;
+      // Use secure function to get public screams without wallet addresses
+      const { data, error } = await supabase.rpc('get_public_screams');
 
       if (error) throw error;
-      setScreams(data || []);
+      
+      // Apply client-side sorting since the secure function protects wallet addresses
+      const sortedData = (data || []).sort((a, b) => {
+        switch (sortBy) {
+          case 'newest':
+            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+          case 'top-liked':
+            return b.likes - a.likes;
+          case 'top-shared':
+            // For now, use likes as a proxy for shares
+            return b.likes - a.likes;
+          default:
+            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        }
+      });
+      
+      setScreams(sortedData);
     } catch (error) {
       console.error('Error fetching screams:', error);
     } finally {
