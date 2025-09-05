@@ -58,7 +58,7 @@ const YellexApp = () => {
               powered by rage and blockchain
             </span>
             <span className="mx-2">|</span>
-            <span className="text-neon-cyan">Post: 0.01 SOL</span>
+            <span className="text-neon-cyan">Post: 0.005 SOL</span>
           </div>
         </footer>
       </div>

@@ -86,7 +86,7 @@ export const useYellSubmission = () => {
       if (action === 'post') {
         toast({
           title: "💸 Processing payment",
-          description: "Creating transaction for 0.01 SOL...",
+          description: "Creating transaction for 0.005 SOL...",
         });
 
         // Try with RPC fallback for better reliability

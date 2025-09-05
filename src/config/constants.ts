@@ -24,7 +24,7 @@ export const RPC_ENDPOINT = RPC_ENDPOINTS[0]; // Default to Helius
 
 // Payment Configuration
 export const YELLEX_TREASURY_WALLET = 'BMgz5grWtsgHsoPnrczXZdhDgT3wBSufNjyYU5jFyFrs';
-export const POST_PRICE_SOL = 0.01;
+export const POST_PRICE_SOL = 0.005;
 
 // $YLX Token Configuration - Now secured in Supabase secrets
 // These will be loaded from backend for security
