@@ -99,7 +99,7 @@ export const createPaymentTransaction = async (
     console.log('💰 Creating payment transaction...', { wallet: publicKey.toString() });
     
     const recipientPubkey = new PublicKey(YELLEX_TREASURY_WALLET);
-    const lamports = POST_PRICE_SOL * LAMPORTS_PER_SOL;
+    const lamports = Math.round(POST_PRICE_SOL * LAMPORTS_PER_SOL);
 
     console.log('💸 Transaction details:', { 
       recipient: YELLEX_TREASURY_WALLET, 
@@ -116,36 +116,20 @@ export const createPaymentTransaction = async (
     
     const balance = balanceResult! * LAMPORTS_PER_SOL;
     
-    // Get dynamic priority fee from Helius API for optimal transaction success
-    let priorityFee = 30000; // Default fallback
-    try {
-      const response = await fetch(RPC_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          jsonrpc: '2.0',
-          id: 'priority-fee',
-          method: 'getPriorityFeeEstimate',
-          params: [{
-            accountKeys: [publicKey.toString(), recipientPubkey.toString()],
-            options: { priorityLevel: 'high' }
-          }]
-        })
-      });
-      const data = await response.json();
-      if (data.result?.priorityFeeEstimate) {
-        priorityFee = Math.min(Math.max(data.result.priorityFeeEstimate, 20000), 200000);
-        console.log('🚀 Dynamic priority fee from Helius:', priorityFee);
-      }
-    } catch (e) {
-      console.log('⚠️ Using fallback priority fee:', priorityFee);
-    }
+    // Get dynamic priority fee (microlamports per CU)
+    const priorityFee = await getPriorityFee(connection);
+    console.log('🚀 Priority fee (microlamports/CU):', priorityFee);
     
-    // More accurate fee estimation including priority fees
-    const requiredBalance = lamports + 50000 + priorityFee; // Increased buffer for priority fees
+    // Estimate total required lamports including priority fees
+    const computeUnits = 300000;
+    const priorityLamports = Math.ceil((priorityFee * computeUnits) / 1_000_000); // convert microLamports->lamports
+    const feeBufferLamports = 5000; // conservative base fee buffer
+    const requiredBalance = lamports + feeBufferLamports + priorityLamports;
     
     if (balance < requiredBalance) {
-      throw new Error(`Insufficient balance. Required: ${requiredBalance / LAMPORTS_PER_SOL} SOL, Available: ${balance / LAMPORTS_PER_SOL} SOL`);
+      const requiredSol = requiredBalance / LAMPORTS_PER_SOL;
+      const availableSol = balance / LAMPORTS_PER_SOL;
+      throw new Error(`Insufficient balance. Required: ${requiredSol} SOL, Available: ${availableSol} SOL`);
     }
 
     // Get recent blockhash with confirmed commitment for faster processing
@@ -155,7 +139,7 @@ export const createPaymentTransaction = async (
     const instructions = [
       // Set compute unit limit (simple transfer needs ~300 CU, we set 300000 for safety with complex operations)
       ComputeBudgetProgram.setComputeUnitLimit({
-        units: 300000,
+        units: computeUnits,
       }),
       // Set priority fee in microlamports per compute unit (optimized for high success rate)
       ComputeBudgetProgram.setComputeUnitPrice({
