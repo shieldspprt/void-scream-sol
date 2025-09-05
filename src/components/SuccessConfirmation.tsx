@@ -67,9 +67,9 @@ export const SuccessConfirmation = ({ isOpen, onClose, onYellAgain }: SuccessCon
             </p>
             <Button
               onClick={handleShare}
-              variant="outline"
+              variant="secondary"
               size="sm"
-              className="btn-glitch text-xs h-8"
+              className="btn-glitch text-xs h-8 bg-primary text-primary-foreground border-2 border-primary opacity-100"
             >
               <ExternalLink className="h-3 w-3 mr-1" />
               Share The Pain
@@ -88,8 +88,8 @@ export const SuccessConfirmation = ({ isOpen, onClose, onYellAgain }: SuccessCon
             
             <Button
               onClick={onClose}
-              variant="outline"
-              className="btn-glitch h-12 flex flex-col gap-1"
+              variant="secondary"
+              className="btn-glitch h-12 flex flex-col gap-1 bg-primary text-primary-foreground border-2 border-primary opacity-100"
             >
               <MessageSquare className="h-4 w-4" />
               <span className="text-xs font-mono">VIEW WALL</span>

@@ -325,9 +325,9 @@ export const YellForm = ({ onSuccessfulPost }: YellFormProps) => {
                     </Button>
                     <Button
                       onClick={() => setAudioBlob(null)}
-                      variant="outline"
+                      variant="secondary"
                       size="sm"
-                      className="btn-neon h-10 px-3"
+                      className="btn-neon h-10 px-3 bg-secondary text-secondary-foreground border-2 border-secondary opacity-100"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -366,8 +366,8 @@ export const YellForm = ({ onSuccessfulPost }: YellFormProps) => {
                 setExType('');
                 setAudioBlob(null);
               }}
-              variant="outline"
-              className="w-full h-12 btn-glitch font-mono text-sm touch-manipulation"
+              variant="secondary"
+              className="w-full h-12 btn-glitch font-mono text-sm touch-manipulation bg-primary text-primary-foreground border-2 border-primary opacity-100"
             >
               🔄 RESET RAGE
             </Button>

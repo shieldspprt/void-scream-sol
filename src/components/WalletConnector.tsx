@@ -17,16 +17,16 @@ export const WalletConnector = () => {
           </div>
           <Button 
             onClick={disconnect}
-            variant="outline"
+            variant="secondary"
             size="sm"
-            className="btn-neon"
+            className="btn-neon bg-secondary text-secondary-foreground border-2 border-secondary opacity-100"
           >
             Disconnect
           </Button>
         </div>
       ) : (
         <div className="wallet-adapter-button-trigger">
-          <WalletMultiButton className="btn-neon !bg-primary !text-primary-foreground hover:!bg-transparent hover:!text-primary !border-2 !border-primary !rounded !font-bold !transition-all !duration-200 hover:!shadow-glow-neon" />
+          <WalletMultiButton className="btn-neon !bg-primary !text-primary-foreground hover:!bg-primary/80 !border-2 !border-primary !rounded !font-bold !transition-all !duration-200 hover:!shadow-glow-neon !opacity-100" />
         </div>
       )}
     </div>

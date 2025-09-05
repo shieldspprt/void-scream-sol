@@ -42,8 +42,8 @@ export const SuccessScreen: React.FC<SuccessScreenProps> = ({
           <div className="space-y-3">
             <Button
               onClick={() => window.open(explorerUrl, '_blank')}
-              variant="outline"
-              className="btn-neon w-full"
+              variant="secondary"
+              className="btn-neon w-full bg-secondary text-secondary-foreground border-2 border-secondary opacity-100"
             >
               <ExternalLink className="h-4 w-4 mr-2" />
               View on Solana Explorer

@@ -148,7 +148,7 @@ const ScreamPage = () => {
       <header className="relative z-10 p-6">
         <div className="flex items-center justify-between max-w-4xl mx-auto">
           <Link to="/">
-            <Button variant="outline" className="btn-neon">
+            <Button variant="secondary" className="btn-neon bg-secondary text-secondary-foreground border-2 border-secondary opacity-100">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Wall
             </Button>
