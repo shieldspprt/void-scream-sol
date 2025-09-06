@@ -21,6 +21,34 @@ import {
   MAX_RETRIES 
 } from '@/config/constants';
 
+// Get custom RPC endpoint from backend
+export const getRpcEndpoint = async (): Promise<string> => {
+  try {
+    const response = await fetch('https://orucuxrquthieojrbyze.supabase.co/functions/v1/get-rpc-endpoint', {
+      headers: {
+        'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ydWN1eHJxdXRoaWVvanJieXplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE3Nzk1NTMsImV4cCI6MjA2NzM1NTU1M30.3HPL72f6c97V5MhwDsbS2ckh826iq66At36xU6yTNhk`,
+      },
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      if (data.rpcEndpoint) {
+        console.log('Using custom RPC endpoint from backend');
+        return data.rpcEndpoint;
+      }
+      if (data.fallback) {
+        console.log('Using fallback RPC endpoint');
+        return data.fallback;
+      }
+    }
+  } catch (error) {
+    console.warn('Failed to get custom RPC endpoint, using default:', error);
+  }
+  
+  // Fallback to default
+  return RPC_ENDPOINT;
+};
+
 // Create connection with RPC fallback logic for better reliability
 export const createConnection = (rpcEndpoint?: string): Connection => {
   const endpoint = rpcEndpoint || RPC_ENDPOINT;
@@ -35,14 +63,27 @@ export const createConnection = (rpcEndpoint?: string): Connection => {
   });
 };
 
-// Create connection with automatic RPC fallback
+// Create connection with automatic RPC fallback (now using custom endpoint)
 export const createConnectionWithFallback = async (): Promise<Connection> => {
+  // First try to get custom RPC endpoint
+  try {
+    const customRpc = await getRpcEndpoint();
+    const connection = createConnection(customRpc);
+    // Test the connection by getting latest blockhash
+    await connection.getLatestBlockhash('confirmed');
+    console.log(`Successfully connected to custom RPC: ${customRpc.replace(/api-key=[^&]+/, 'api-key=***')}`);
+    return connection;
+  } catch (error) {
+    console.warn('Custom RPC failed, trying fallback endpoints...', error);
+  }
+
+  // Fallback to hardcoded endpoints
   for (const rpcEndpoint of RPC_ENDPOINTS) {
     try {
       const connection = createConnection(rpcEndpoint);
       // Test the connection by getting latest blockhash
       await connection.getLatestBlockhash('confirmed');
-      console.log(`Successfully connected to RPC: ${rpcEndpoint}`);
+      console.log(`Successfully connected to fallback RPC: ${rpcEndpoint}`);
       return connection;
     } catch (error) {
       console.warn(`RPC ${rpcEndpoint} failed, trying next...`, error);
