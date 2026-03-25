@@ -404,9 +404,9 @@ Try your luck at Yellex! https://yellex.fun`;
             >
               <div className="text-center mb-8">
                 <h2 className="text-2xl font-semibold text-white mb-2">
-                  Choose Your Target
+                  Pick Your Target
                 </h2>
-                <p className="text-slate-400">Select a historical figure to seduce</p>
+                <p className="text-slate-400">8 legends waiting to roast you</p>
                 {/* Free attempts badge */}
                 <div className="mt-4">
                   <Badge 
@@ -414,9 +414,9 @@ Try your luck at Yellex! https://yellex.fun`;
                     className={`${remainingFree > 0 ? 'bg-green-500/20 text-green-400 border-green-500/50' : 'bg-orange-500/20 text-orange-400 border-orange-500/50'}`}
                   >
                     {remainingFree > 0 ? (
-                      <>🎁 {remainingFree} FREE {remainingFree === 1 ? 'attempt' : 'attempts'} remaining</>
+                      <>🎁 {remainingFree} FREE left</>
                     ) : (
-                      <>💰 Pay {PRICE_SOL} SOL per attempt</>
+                      <>💰 {PRICE_SOL} SOL</>
                     )}
                   </Badge>
                 </div>
@@ -524,10 +524,6 @@ Try your luck at Yellex! https://yellex.fun`;
                       )}
                     </button>
                   </div>
-                  <p className="text-xs text-slate-500 mt-1.5 flex items-center gap-1">
-                    <Sparkles className="w-3 h-3" />
-                    Click the ✨ button for AI-generated pickup lines
-                  </p>
                 </div>
 
                 {/* Prominent Send Button */}
