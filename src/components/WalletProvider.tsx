@@ -1,40 +1,35 @@
-import React, { useEffect, useState } from 'react';
+'use client';
+
+import { FC, ReactNode, useMemo } from 'react';
 import { ConnectionProvider, WalletProvider as SolanaWalletProvider } from '@solana/wallet-adapter-react';
-import { PhantomWalletAdapter, SolflareWalletAdapter } from '@solana/wallet-adapter-wallets';
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
-import { RPC_ENDPOINT } from '@/config/constants';
-import { getRpcEndpoint } from '@/utils/solana';
+import { PhantomWalletAdapter, SolflareWalletAdapter } from '@solana/wallet-adapter-wallets';
+import { clusterApiUrl } from '@solana/web3.js';
 
 // Import wallet adapter CSS
 import '@solana/wallet-adapter-react-ui/styles.css';
 
-interface WalletProviderProps {
-  children: React.ReactNode;
+interface Props {
+  children: ReactNode;
 }
 
-export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
-  const [endpoint, setEndpoint] = useState<string>(RPC_ENDPOINT);
+export const WalletProvider: FC<Props> = ({ children }) => {
+  // Use devnet for testing, mainnet-beta for production
+  const endpoint = useMemo(() => 
+    process.env.NEXT_PUBLIC_SOLANA_NETWORK === 'mainnet' 
+      ? 'https://api.mainnet-beta.solana.com'
+      : clusterApiUrl('devnet'),
+    []
+  );
 
-  useEffect(() => {
-    // Load custom RPC endpoint on component mount
-    const loadRpcEndpoint = async () => {
-      try {
-        const customEndpoint = await getRpcEndpoint();
-        console.log('WalletProvider using RPC:', customEndpoint.replace(/api-key=[^&]+/, 'api-key=***'));
-        setEndpoint(customEndpoint);
-      } catch (error) {
-        console.warn('Failed to load custom RPC endpoint, using default:', error);
-      }
-    };
-
-    loadRpcEndpoint();
-  }, []);
-
-  // Support multiple popular wallets for better UX
-  const wallets = [
-    new PhantomWalletAdapter(),
-    new SolflareWalletAdapter(),
-  ];
+  // Configure supported wallets
+  const wallets = useMemo(
+    () => [
+      new PhantomWalletAdapter(),
+      new SolflareWalletAdapter(),
+    ],
+    []
+  );
 
   return (
     <ConnectionProvider endpoint={endpoint}>

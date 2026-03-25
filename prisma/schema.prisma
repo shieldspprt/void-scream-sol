@@ -1,0 +1,50 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Historian {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  era         String
+  title       String
+  image       String
+  emoji       String
+  personality String
+  roastStyle  String
+  flirtStyle  String
+  color       String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  submissions Submission[]
+}
+
+model Submission {
+  id           String     @id @default(cuid())
+  walletAddress String?
+  pickupLine   String
+  response     String
+  responseType String     // "roast" or "flirt"
+  txSignature  String?
+  sharedOnX    Boolean    @default(false)
+  historianId  String
+  historian    Historian  @relation(fields: [historianId], references: [id])
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model User {
+  id            String       @id @default(cuid())
+  walletAddress String      @unique
+  totalAttempts Int          @default(0)
+  successCount  Int          @default(0)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
