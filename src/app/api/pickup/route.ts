@@ -89,37 +89,42 @@ export async function POST(request: NextRequest) {
     
     let response: string;
     let usedAI = false;
+    let aiError: string | null = null;
 
-    // Try AI first with better error handling
+    // Try AI first with detailed logging
     try {
+      console.log('[AI] Creating ZAI instance...');
       const zai = await ZAI.create();
-      const prompt = `You are ${historian.name}, ${historian.title}. Personality: ${historian.personality.slice(0, 200)}
-
-The user said: "${pickupLine}"
-
-You must ${isRoast ? 'ROAST' : 'FLIRT BACK TO'} this pickup line in your unique voice.
-${isRoast ? 'Be savage, witty, and devastating. Make it memorable.' : 'Be seductive, charming, and flirty. Make them feel special.'}
-
-Keep it under 2 sentences. Stay in character. Be creative!`;
-
+      console.log('[AI] ZAI instance created successfully');
+      
+      const prompt = `You are ${historian.name}, ${historian.title}. Personality: ${historian.personality.slice(0, 200)}`;
+      console.log('[AI] Sending prompt:', prompt.slice(0, 100) + '...');
+      
       const completion = await zai.chat.completions.create({
         messages: [
           { role: 'system', content: prompt },
           { role: 'user', content: pickupLine }
         ],
         temperature: 0.9,
-        max_tokens: 150
+        max_tokens: 150,
+        thinking: { type: 'disabled' }
       });
-
-      const aiResponse = completion.choices[0]?.message?.content?.trim();
+      
+      console.log('[AI] Got completion:', JSON.stringify(completion, null, 2));
+      
+      const aiResponse = completion.choices?.[0]?.message?.content?.trim();
       if (aiResponse && aiResponse.length > 10 && aiResponse.length < 250) {
         response = aiResponse;
         usedAI = true;
+        console.log('[AI] Using AI response');
       } else {
+        console.log('[AI] Invalid response, falling back');
         throw new Error('AI response invalid');
       }
-    } catch (error: any) {
-      console.error('AI error:', error);
+    } catch (err) {
+      console.error('[AI] ERROR:', err.message);
+      console.log('[AI] Falling back to static responses');
+      
       // Fallback to static responses
       const fallbacks: Record<string, { roast: string; flirt: string }> = {
         'Satoshi Nakamoto': {
