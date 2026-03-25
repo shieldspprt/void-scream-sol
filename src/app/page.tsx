@@ -251,6 +251,13 @@ export default function Home() {
       return;
     }
 
+    // Client-side validation
+    const validation = validatePickupLine(pickupLine);
+    if (!validation.valid) {
+      toast.error(validation.reason);
+      return;
+    }
+
     setIsLoading(true);
     try {
       const res = await fetch('/api/pickup', {
@@ -658,46 +665,38 @@ Try your luck at Yellex! https://yellex.fun`;
               >
                 <Button
                   onClick={handleShareX}
-                  className="flex-1 bg-black hover:bg-gray-900 text-white"
+                  className="flex-1 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold shadow-lg"
                 >
                   <Twitter className="w-4 h-4 mr-2" />
                   Share on X
                 </Button>
                 <Button
-                  variant="outline"
                   onClick={handleCopy}
-                  className="flex-1 border-slate-700 text-slate-300 hover:text-white hover:bg-slate-800"
+                  variant="outline"
+                  className="flex-1 border-slate-400 bg-slate-800 text-slate-200 hover:text-white hover:bg-slate-700"
                 >
                   {copied ? (
                     <Check className="w-4 h-4 mr-2 text-green-400" />
                   ) : (
                     <Copy className="w-4 h-4 mr-2" />
                   )}
-                  Copy Response
+                  {copied ? 'Copied!' : 'Copy Response'}
                 </Button>
               </motion.div>
 
-              {/* Try Again / Back options */}
+              {/* Try Again */}
               <motion.div 
-                className="mt-6 flex flex-col sm:flex-row gap-3 justify-center"
+                className="mt-6 text-center"
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.6 }}
               >
                 <Button
-                  variant="outline"
                   onClick={handleBackToWrite}
-                  className="border-slate-700 text-slate-300 hover:text-white hover:bg-slate-800"
+                  className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white font-semibold px-6"
                 >
-                  <ChevronLeft className="w-4 h-4 mr-2" />
+                  <Sparkles className="w-4 h-4 mr-2" />
                   Try Another Line
-                </Button>
-                <Button
-                  variant="ghost"
-                  onClick={handleReset}
-                  className="text-slate-400 hover:text-white"
-                >
-                  Pick Different Historian
                 </Button>
               </motion.div>
               
