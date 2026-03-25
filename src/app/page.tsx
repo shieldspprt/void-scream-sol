@@ -474,7 +474,7 @@ Try your luck at Historian Pickup!`;
                   variant="outline"
                   onClick={handleSuggest}
                   disabled={isSuggesting}
-                  className="w-full border-slate-700 text-slate-300 hover:text-white hover:bg-slate-800"
+                  className="w-full border-slate-600 text-slate-200 hover:text-white hover:bg-slate-700 hover:border-slate-500"
                 >
                   {isSuggesting ? (
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -566,7 +566,7 @@ Try your luck at Historian Pickup!`;
                       onClick={() => {}}
                       disabled={true}
                       variant="outline"
-                      className="w-full border-slate-700 text-slate-500"
+                      className="w-full border-slate-600 bg-slate-800/50 text-slate-400"
                     >
                       <Wallet className="w-4 h-4 mr-2" />
                       Connect wallet to support us
