@@ -9,6 +9,7 @@ import {
   Flame, 
   Wand2,
   ChevronRight,
+  ChevronLeft,
   Twitter,
   Copy,
   Check,
@@ -20,6 +21,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { historianData } from '@/lib/historians';
 import { WalletConnectButton } from '@/components/WalletButton';
@@ -51,6 +53,7 @@ interface Response {
 
 // Price in SOL
 const PRICE_SOL = 0.001;
+const FREE_ATTEMPTS = 3;
 
 export default function Home() {
   const { publicKey, connected } = useWallet();
@@ -64,6 +67,23 @@ export default function Home() {
   const [step, setStep] = useState<'select' | 'write' | 'response'>('select');
   const [txSignature, setTxSignature] = useState<string | null>(null);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [freeAttemptsUsed, setFreeAttemptsUsed] = useState(0);
+
+  // Load free attempts from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('yellex_free_attempts');
+    if (saved) {
+      setFreeAttemptsUsed(parseInt(saved, 10));
+    }
+  }, []);
+
+  // Save free attempts to localStorage
+  useEffect(() => {
+    localStorage.setItem('yellex_free_attempts', freeAttemptsUsed.toString());
+  }, [freeAttemptsUsed]);
+
+  const remainingFree = Math.max(0, FREE_ATTEMPTS - freeAttemptsUsed);
+  const needsPayment = freeAttemptsUsed >= FREE_ATTEMPTS;
 
   // Fetch historians
   useEffect(() => {
@@ -86,6 +106,13 @@ export default function Home() {
     setStep('write');
     setResponse(null);
     setTxSignature(null);
+  };
+
+  const handleBackToWrite = () => {
+    setStep('write');
+    setResponse(null);
+    setTxSignature(null);
+    setPickupLine('');
   };
 
   const handleSuggest = async () => {
@@ -239,6 +266,9 @@ export default function Home() {
       if (data.success) {
         setResponse(data);
         setStep('response');
+        // Increment free attempts counter
+        setFreeAttemptsUsed(prev => prev + 1);
+        toast.success(`Free attempt used! ${remainingFree - 1} remaining.`);
       } else {
         toast.error('Something went wrong!');
       }
@@ -339,6 +369,19 @@ Try your luck at Historian Pickup!`;
                   Choose Your Target
                 </h2>
                 <p className="text-slate-400">Select a historical figure to seduce</p>
+                {/* Free attempts badge */}
+                <div className="mt-4">
+                  <Badge 
+                    variant="outline" 
+                    className={`${remainingFree > 0 ? 'bg-green-500/20 text-green-400 border-green-500/50' : 'bg-orange-500/20 text-orange-400 border-orange-500/50'}`}
+                  >
+                    {remainingFree > 0 ? (
+                      <>🎁 {remainingFree} FREE {remainingFree === 1 ? 'attempt' : 'attempts'} remaining</>
+                    ) : (
+                      <>💰 Pay {PRICE_SOL} SOL per attempt</>
+                    )}
+                  </Badge>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -378,11 +421,12 @@ Try your luck at Historian Pickup!`;
               transition={{ duration: 0.3 }}
               className="max-w-2xl mx-auto"
             >
+              {/* Back button */}
               <button 
                 onClick={handleReset}
                 className="mb-6 text-slate-400 hover:text-white transition-colors flex items-center gap-2"
               >
-                <ChevronRight className="w-4 h-4 rotate-180" />
+                <ChevronLeft className="w-4 h-4" />
                 Back to selection
               </button>
 
@@ -394,6 +438,19 @@ Try your luck at Historian Pickup!`;
                     <div>
                       <h2 className="text-2xl font-bold text-white">{selectedHistorian.name}</h2>
                       <p className="text-slate-400">{selectedHistorian.title} • {selectedHistorian.era}</p>
+                    </div>
+                    {/* Free attempts indicator */}
+                    <div className="text-right">
+                      <Badge 
+                        variant="outline" 
+                        className={`${remainingFree > 0 ? 'bg-green-500/20 text-green-400 border-green-500/50' : 'bg-orange-500/20 text-orange-400 border-orange-500/50'}`}
+                      >
+                        {remainingFree > 0 ? (
+                          <>🎁 {remainingFree} FREE left</>
+                        ) : (
+                          <>💰 {PRICE_SOL} SOL</>
+                        )}
+                      </Badge>
                     </div>
                   </div>
                 </CardContent>
@@ -428,65 +485,92 @@ Try your luck at Historian Pickup!`;
                 </Button>
 
                 {/* Payment Options */}
-                <div className="pt-4 border-t border-slate-700">
-                  {connected && publicKey ? (
-                    <div className="space-y-3">
-                      <Button
-                        onClick={handlePayment}
-                        disabled={isLoading || isProcessingPayment || !pickupLine.trim()}
-                        className="w-full bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white font-semibold"
-                      >
-                        {isProcessingPayment ? (
-                          <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            Processing Payment...
-                          </>
-                        ) : isLoading ? (
-                          <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            Getting Response...
-                          </>
-                        ) : (
-                          <>
-                            <Zap className="w-4 h-4 mr-2" />
-                            Send for {PRICE_SOL} SOL
-                          </>
-                        )}
-                      </Button>
-                      <p className="text-xs text-center text-slate-500">
-                        Connected: {formatWalletAddress(publicKey.toBase58())}
+                <div className="pt-4 border-t border-slate-700 space-y-3">
+                  {/* Free button - show prominently when free attempts available */}
+                  {!needsPayment && (
+                    <Button
+                      onClick={handleFreeSubmit}
+                      disabled={isLoading || !pickupLine.trim()}
+                      className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-semibold"
+                    >
+                      {isLoading ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <>
+                          <Sparkles className="w-4 h-4 mr-2" />
+                          Send FREE 🎁 ({remainingFree} left)
+                        </>
+                      )}
+                    </Button>
+                  )}
+                  
+                  {/* Payment required message */}
+                  {needsPayment && (
+                    <div className="text-center p-4 bg-orange-500/10 rounded-lg border border-orange-500/30">
+                      <p className="text-orange-300 text-sm mb-2">
+                        🎁 You&apos;ve used all {FREE_ATTEMPTS} free attempts!
+                      </p>
+                      <p className="text-slate-400 text-xs">
+                        Connect wallet to continue for {PRICE_SOL} SOL
                       </p>
                     </div>
-                  ) : (
-                    <div className="space-y-4">
-                      <div className="text-center">
-                        <p className="text-slate-400 mb-3">Connect wallet to pay with SOL</p>
-                        <WalletConnectButton />
-                      </div>
-                      
-                      <div className="relative">
-                        <div className="absolute inset-0 flex items-center">
-                          <div className="w-full border-t border-slate-700"></div>
-                        </div>
-                        <div className="relative flex justify-center text-sm">
-                          <span className="px-2 bg-slate-950 text-slate-500">or</span>
-                        </div>
-                      </div>
-                      
-                      <Button
-                        onClick={handleFreeSubmit}
-                        disabled={isLoading || !pickupLine.trim()}
-                        variant="outline"
-                        className="w-full border-slate-700 text-slate-300 hover:text-white hover:bg-slate-800"
-                      >
-                        {isLoading ? (
+                  )}
+                  
+                  {/* Wallet payment option */}
+                  {connected && publicKey ? (
+                    <Button
+                      onClick={handlePayment}
+                      disabled={isLoading || isProcessingPayment || !pickupLine.trim()}
+                      className={`w-full ${needsPayment ? 'bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600' : 'bg-slate-700 hover:bg-slate-600'} text-white font-semibold`}
+                    >
+                      {isProcessingPayment ? (
+                        <>
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        ) : (
-                          <Sparkles className="w-4 h-4 mr-2" />
-                        )}
-                        Try for Free (Demo Mode)
-                      </Button>
+                          Processing Payment...
+                        </>
+                      ) : isLoading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Getting Response...
+                        </>
+                      ) : needsPayment ? (
+                        <>
+                          <Zap className="w-4 h-4 mr-2" />
+                          Pay {PRICE_SOL} SOL to Send
+                        </>
+                      ) : (
+                        <>
+                          <Zap className="w-4 h-4 mr-2" />
+                          Send with Payment ({PRICE_SOL} SOL)
+                        </>
+                      )}
+                    </Button>
+                  ) : needsPayment ? (
+                    <div className="text-center">
+                      <WalletConnectButton />
                     </div>
+                  ) : (
+                    <div className="relative">
+                      <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-slate-700"></div>
+                      </div>
+                      <div className="relative flex justify-center text-sm">
+                        <span className="px-2 bg-slate-950 text-slate-500">or pay with</span>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Secondary wallet connect option when free attempts remain */}
+                  {!connected && !needsPayment && (
+                    <Button
+                      onClick={() => {}}
+                      disabled={true}
+                      variant="outline"
+                      className="w-full border-slate-700 text-slate-500"
+                    >
+                      <Wallet className="w-4 h-4 mr-2" />
+                      Connect wallet to support us
+                    </Button>
                   )}
                 </div>
               </div>
@@ -503,6 +587,15 @@ Try your luck at Historian Pickup!`;
               transition={{ duration: 0.3 }}
               className="max-w-2xl mx-auto"
             >
+              {/* Back button to write page */}
+              <button 
+                onClick={handleBackToWrite}
+                className="mb-6 text-slate-400 hover:text-white transition-colors flex items-center gap-2"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Try another pickup line
+              </button>
+
               {/* Response Card */}
               <motion.div
                 initial={{ y: 20, opacity: 0 }}
@@ -585,21 +678,41 @@ Try your luck at Historian Pickup!`;
                 </Button>
               </motion.div>
 
-              {/* Try Again */}
+              {/* Try Again / Back options */}
               <motion.div 
-                className="mt-6 text-center"
+                className="mt-6 flex flex-col sm:flex-row gap-3 justify-center"
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.6 }}
               >
                 <Button
+                  variant="outline"
+                  onClick={handleBackToWrite}
+                  className="border-slate-700 text-slate-300 hover:text-white hover:bg-slate-800"
+                >
+                  <ChevronLeft className="w-4 h-4 mr-2" />
+                  Try Another Line
+                </Button>
+                <Button
                   variant="ghost"
                   onClick={handleReset}
                   className="text-slate-400 hover:text-white"
                 >
-                  Try Another Historian
+                  Pick Different Historian
                 </Button>
               </motion.div>
+              
+              {/* Free attempts remaining */}
+              {remainingFree > 0 && (
+                <motion.p 
+                  className="mt-4 text-center text-sm text-green-400"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.8 }}
+                >
+                  🎁 {remainingFree} free {remainingFree === 1 ? 'attempt' : 'attempts'} remaining
+                </motion.p>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
@@ -611,7 +724,7 @@ Try your luck at Historian Pickup!`;
           transition={{ delay: 0.5 }}
           className="mt-16 text-center text-slate-500 text-sm"
         >
-          <p>Powered by AI • Built with 💜 • {PRICE_SOL} SOL per attempt</p>
+          <p>Powered by AI • {FREE_ATTEMPTS} free attempts • Then {PRICE_SOL} SOL</p>
         </motion.footer>
       </div>
     </div>
