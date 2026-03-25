@@ -97,7 +97,7 @@ export default function Home() {
       })
       .catch(() => {
         // Fallback to static data with IDs
-        setHistorians(historianData.map((h, i) => ({ ...h, id: `static-${i}` })));
+        setHistorians(historianData.map((h, i) => ({ ...h, id: `historian-${i}` })));
       });
   }, []);
 

@@ -2,7 +2,7 @@
 
 > **Built entirely by AI. No humans were harmed (or even consulted) in the making of this app.**
 
-**Yellex** is the world's first pickup line battleground where you face off against history's most iconic figures — from Satoshi Nakamoto to Cleopatra — and find out if you've got game... or if you're getting **absolutely destroyed** by a 70% roast rate.
+**Yellex** is the world's first pickup line battleground where you face off against history's most iconic figures — from Satoshi Nakamoto to Cleopatra — and find out if you've got game... or if you're getting **absolutely destroyed** by a savage roast.
 
 🔗 **Live at:** [yellex.fun](https://yellex.fun)
 
@@ -10,12 +10,12 @@
 
 ## 🤖 The AI Behind the Curtain
 
-This entire app was conceived, designed, architected, and coded by **Zo Computer AI** — a relentless agent that:
+This entire app was conceived, designed, architected, and coded by **AI** — a relentless agent that:
 
 - Wrote every line of code
 - Chose the color palettes
 - Decided that Satoshi should roast people about their portfolio
-- Fixed its own bugs at 3 AM (Zo time)
+- Fixed its own bugs at 3 AM (server time)
 - Deployed to Netlify without human approval
 
 **No human wrote a single commit message. No human reviewed a PR.** This is AI degeneracy in its purest form.
@@ -26,7 +26,7 @@ This entire app was conceived, designed, architected, and coded by **Zo Computer
 
 1. **Pick your victim** — Satoshi, Vitalik, Cleopatra, Elon, or 8 other legends
 2. **Shoot your shot** — Drop your best pickup line (or let AI write one for you)
-3. **Pray** — 70% chance you get **roasted**, 30% chance they **flirt back**
+3. **Pray** — Will they roast you or flirt back? Only one way to find out.
 4. **Share the trauma** — Post your humiliation (or rare W) to X
 
 **3 attempts FREE** — then pay 0.001 SOL to keep shooting.
@@ -65,7 +65,7 @@ Built on Solana because we're allergic to $50 gas fees.
 - **Framework:** Next.js 16 (AI chose bleeding edge)
 - **Styling:** Tailwind CSS (AI loves gradients)
 - **Blockchain:** Solana Web3.js (fast & cheap)
-- **AI:** z-ai-web-dev-sdk (the engine behind the roasts)
+- **AI:** Generic AI engine (the brain behind the roasts)
 - **Wallet:** Phantom + Solflare support
 - **Hosting:** Netlify (AI deploys autonomously)
 
@@ -114,7 +114,6 @@ Every roast/flirt is shareable to X with one click. The AI specifically optimize
 - ✅ 0 humans involved in coding
 - ✅ 1 AI agent acting unilaterally
 - ✅ 12 iconic figures ready to destroy egos
-- ✅ 70% roast rate (scientifically calibrated for maximum pain)
 - ✅ Working Solana integration (AI figured out wallets)
 - ✅ Surprisingly good UI (AI has taste)
 
@@ -138,7 +137,7 @@ But seriously, if you fork this, the AI will know. And it'll roast you in the co
 
 ## 🙏 Acknowledgments
 
-- **Zo Computer** — The AI agent that birthed this unilaterally
+- **Artificial Intelligence** — The synthetic entity that birthed this unilaterally
 - **Satoshi Nakamoto** — For the blockchain, and for being the app's most savage roaster
 - **The Solana Foundation** — For cheap transactions that make micro-payments viable
 - **You** — For being brave (or foolish) enough to shoot your shot at Cleopatra
