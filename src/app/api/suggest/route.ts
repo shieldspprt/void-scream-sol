@@ -1,6 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import ZAI from 'z-ai-web-dev-sdk';
 
+// ZAI instance caching
+let zaiInstance: Awaited<ReturnType<typeof ZAI.create>> | null = null;
+
+async function getZAI() {
+  if (!zaiInstance) {
+    zaiInstance = await ZAI.create();
+  }
+  return zaiInstance;
+}
+
 // Rate limiting
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 const RATE_LIMIT = 10;
@@ -46,12 +56,12 @@ const fallbackSuggestions: Record<string, string[]> = {
   'Satoshi Nakamoto': [
     "Are you the genesis block? Because you're where everything started for me.",
     "I don't know your private key, but I know you're the one.",
-    "Let's create a transaction that never confirms... because I never want this to end.",
+    "Let's create a transaction that never confirms...",
   ],
   'Vitalik Buterin': [
-    "Are you Ethereum 2.0? Because I've been waiting for you forever and you're worth it.",
+    "Are you Ethereum 2.0? Because I've been waiting for you forever.",
     "Let's shard our hearts together and merge into one.",
-    "You must be a smart contract, because you're executing perfectly in my heart.",
+    "You must be a smart contract executing perfectly in my heart.",
   ],
   'Cleopatra': [
     "Are you the Nile? Because you make my heart flow.",
@@ -64,17 +74,17 @@ const fallbackSuggestions: Record<string, string[]> = {
     "Let's create a new blockchain... of love.",
   ],
   'CZ (Changpeng Zhao)': [
-    "I'll list you as my top trading pair.",
+    "I'll list you as my top trading pair with perfect liquidity.",
     "My funds are SAFU, but my heart is all in on you.",
     "You're the BNB to my Binance - essential and burning bright.",
   ],
-  'SBF (Sam Bankman-Fried)': [
+  'Sam Bankman-Fried': [
     "My heart is open for deposits... unlimited withdrawals.",
     "I'll play League less if you give me a chance.",
     "Let's make FTX 2.0... a love exchange.",
   ],
   'Elon Musk': [
-    "Want to see my rocket? It's reusable.",
+    "Want to see my rocket? It's fully reusable for you.",
     "Let's go to Mars together and start a civilization.",
     "You're more electric than my Tesla batteries.",
   ],
@@ -83,25 +93,25 @@ const fallbackSuggestions: Record<string, string[]> = {
     "Let's stake our love together... with proper documentation.",
     "Our relationship is built to last through multiple epochs.",
   ],
-  'Shakespeare': [
+  'William Shakespeare': [
     "Shall I compare thee to a summer's day?",
     "My heart doth beat like a drum for thee.",
-    "Let us be star-crossed lovers, but with a happy ending.",
+    "Let us be star-crossed lovers, with happy ending.",
   ],
-  'Einstein': [
+  'Albert Einstein': [
     "Time dilates when I'm with you... in a good way.",
     "Our attraction is stronger than gravity.",
-    "Let's entangle our particles.",
+    "Let's entangle our particles quantum mechanically.",
   ],
   'Catherine the Great': [
     "I'd conquer half of Europe for you... again.",
-    "Come to my Winter Palace and let's start a revolution.",
-    "You must be a Cossack, for you've ridden into my heart.",
+    "Come to my Winter Palace and start a revolution.",
+    "You must be a Cossack, riding into my heart.",
   ],
-  'Da Vinci': [
-    "You have the smile of my Mona Lisa.",
-    "Let me sketch your beauty... in detail.",
-    "Our love would be my greatest masterpiece.",
+  'Leonardo da Vinci': [
+    "You have the smile of my Mona Lisa - mysterious.",
+    "Let me sketch your beauty... in great detail.",
+    "Our love would be my greatest unfinished work."
   ]
 };
 
@@ -136,9 +146,9 @@ export async function POST(request: NextRequest) {
 
     let suggestion: string;
 
-    // Try AI first
+    // Try AI first with caching
     try {
-      const zai = await ZAI.create();
+      const zai = await getZAI();
       const completion = await zai.chat.completions.create({
         messages: [
           {
@@ -151,14 +161,15 @@ export async function POST(request: NextRequest) {
           }
         ],
         temperature: 0.95,
-        max_tokens: 60
+        max_tokens: 60,
+        thinking: { type: 'disabled' }
       });
 
       suggestion = completion.choices[0]?.message?.content?.trim() || '';
       
       // Validate
       if (!suggestion || suggestion.length < 10 || suggestion.length > 150) {
-        throw new Error('Invalid AI response');
+        throw new Error('AI response invalid');
       }
     } catch {
       // Use fallback
@@ -166,7 +177,7 @@ export async function POST(request: NextRequest) {
       if (fallbacks) {
         suggestion = fallbacks[Math.floor(Math.random() * fallbacks.length)];
       } else {
-        suggestion = "Are you history? Because I want to make you with me.";
+        suggestion = "Are you history? Because I want to make some with you.";
       }
     }
 
