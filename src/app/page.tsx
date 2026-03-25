@@ -244,6 +244,37 @@ export default function Home() {
     setIsLoading(false);
   };
 
+  // Client-side security validation
+  const validatePickupLine = (input: string): { valid: boolean; reason?: string } => {
+    if (input.length < 3) {
+      return { valid: false, reason: 'Pickup line too short (min 3 chars)' };
+    }
+    if (input.length > 200) {
+      return { valid: false, reason: 'Pickup line too long (max 200 chars)' };
+    }
+    
+    // Block script tags and dangerous patterns
+    const blockedPatterns = [
+      /<script/i, /javascript:/i, /on\w+\s*=/i, 
+      /eval\s*\(/i, /document\.write/i, /fetch\s*\(/i,
+      /localStorage/i, /sessionStorage/i, /window\./i
+    ];
+    
+    for (const pattern of blockedPatterns) {
+      if (pattern.test(input)) {
+        return { valid: false, reason: 'Invalid characters detected' };
+      }
+    }
+    
+    // Check excessive caps
+    const capsRatio = (input.match(/[A-Z]/g) || []).length / input.length;
+    if (capsRatio > 0.7 && input.length > 10) {
+      return { valid: false, reason: 'Please don\'t shout!' };
+    }
+    
+    return { valid: true };
+  };
+
   // Free mode - skip payment (for demo)
   const handleFreeSubmit = async () => {
     if (!pickupLine.trim() || !selectedHistorian) {
@@ -464,47 +495,59 @@ Try your luck at Yellex! https://yellex.fun`;
               </Card>
 
               {/* Pickup Line Input */}
-              <div className="space-y-4">
-                <label className="block">
-                  <span className="text-white font-medium mb-2 block">
-                    Your Pickup Line to {selectedHistorian.name}
-                  </span>
-                  <Textarea
-                    value={pickupLine}
-                    onChange={(e) => setPickupLine(e.target.value)}
-                    placeholder={`Write something clever for ${selectedHistorian.name}...`}
-                    className="min-h-[120px] bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-pink-500 focus:ring-pink-500/20"
-                  />
-                </label>
+              <div className="space-y-5">
+                {/* Textarea with embedded suggest button */}
+                <div className="relative">
+                  <label className="block mb-2">
+                    <span className="text-white font-semibold text-lg">
+                      Your Pickup Line to {selectedHistorian.name}
+                    </span>
+                  </label>
+                  <div className="relative">
+                    <Textarea
+                      value={pickupLine}
+                      onChange={(e) => setPickupLine(e.target.value)}
+                      placeholder={`Write something clever for ${selectedHistorian.name}...`}
+                      className="min-h-[160px] bg-slate-800/70 border-slate-600 text-white placeholder:text-slate-500 focus:border-pink-500 focus:ring-pink-500/20 text-lg pr-14"
+                    />
+                    {/* Floating AI Suggest Button */}
+                    <button
+                      onClick={handleSuggest}
+                      disabled={isSuggesting}
+                      className="absolute top-3 right-3 p-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-lg shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      title="AI Suggestion"
+                    >
+                      {isSuggesting ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : (
+                        <Wand2 className="w-5 h-5" />
+                      )}
+                    </button>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-1.5 flex items-center gap-1">
+                    <Sparkles className="w-3 h-3" />
+                    Click the ✨ button for AI-generated pickup lines
+                  </p>
+                </div>
 
-                <Button
-                  onClick={handleSuggest}
-                  disabled={isSuggesting}
-                  className="w-full bg-slate-700 hover:bg-slate-600 text-white border border-slate-500 font-medium"
-                >
-                  {isSuggesting ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <Wand2 className="w-4 h-4 mr-2" />
-                  )}
-                  Suggest a Line (AI)
-                </Button>
-
-                {/* Payment Options */}
-                <div className="pt-4 border-t border-slate-700 space-y-3">
+                {/* Prominent Send Button */}
+                <div className="pt-2 space-y-4">
                   {/* Free button - show prominently when free attempts available */}
                   {!needsPayment && (
                     <Button
                       onClick={handleFreeSubmit}
                       disabled={isLoading || !pickupLine.trim()}
-                      className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-semibold"
+                      className="w-full h-16 text-lg bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 hover:from-pink-600 hover:via-purple-600 hover:to-cyan-600 text-white font-bold shadow-xl shadow-purple-500/20 border-2 border-white/10"
                     >
                       {isLoading ? (
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        <Loader2 className="w-6 h-6 mr-3 animate-spin" />
                       ) : (
                         <>
-                          <Sparkles className="w-4 h-4 mr-2" />
-                          Send FREE 🎁 ({remainingFree} left)
+                          <Heart className="w-6 h-6 mr-3" />
+                          SEND PICKUP LINE
+                          <span className="ml-2 text-sm font-normal opacity-80">
+                            🎁 ({remainingFree} free left)
+                          </span>
                         </>
                       )}
                     </Button>
@@ -527,27 +570,27 @@ Try your luck at Yellex! https://yellex.fun`;
                     <Button
                       onClick={handlePayment}
                       disabled={isLoading || isProcessingPayment || !pickupLine.trim()}
-                      className={`w-full ${needsPayment ? 'bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600' : 'bg-slate-700 hover:bg-slate-600'} text-white font-semibold`}
+                      className={`w-full h-16 text-lg ${needsPayment ? 'bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 hover:from-pink-600 hover:via-purple-600 hover:to-cyan-600 shadow-xl shadow-purple-500/20 border-2 border-white/10' : 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600'} text-white font-bold`}
                     >
                       {isProcessingPayment ? (
                         <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          <Loader2 className="w-6 h-6 mr-3 animate-spin" />
                           Processing Payment...
                         </>
                       ) : isLoading ? (
                         <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          <Loader2 className="w-6 h-6 mr-3 animate-spin" />
                           Getting Response...
                         </>
                       ) : needsPayment ? (
                         <>
-                          <Zap className="w-4 h-4 mr-2" />
-                          Pay {PRICE_SOL} SOL to Send
+                          <Zap className="w-6 h-6 mr-3" />
+                          PAY {PRICE_SOL} SOL & SEND
                         </>
                       ) : (
                         <>
-                          <Zap className="w-4 h-4 mr-2" />
-                          Send with Payment ({PRICE_SOL} SOL)
+                          <Heart className="w-6 h-6 mr-3" />
+                          SEND (Pay {PRICE_SOL} SOL)
                         </>
                       )}
                     </Button>
@@ -561,7 +604,7 @@ Try your luck at Yellex! https://yellex.fun`;
                         <div className="w-full border-t border-slate-700"></div>
                       </div>
                       <div className="relative flex justify-center text-sm">
-                        <span className="px-2 bg-slate-950 text-slate-500">or pay with</span>
+                        <span className="px-2 bg-slate-950 text-slate-500">or</span>
                       </div>
                     </div>
                   )}
@@ -572,7 +615,7 @@ Try your luck at Yellex! https://yellex.fun`;
                       onClick={() => {}}
                       disabled={true}
                       variant="outline"
-                      className="w-full border-slate-600 bg-slate-800/50 text-slate-400"
+                      className="w-full border-slate-600 bg-slate-800/50 text-slate-400 h-12"
                     >
                       <Wallet className="w-4 h-4 mr-2" />
                       Connect wallet to support us
