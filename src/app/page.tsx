@@ -671,6 +671,13 @@ Try your luck at Yellex! https://yellex.fun`;
                     {/* Response */}
                     <div className={`p-4 rounded-lg ${response.responseType === 'roast' ? 'bg-orange-500/10' : 'bg-pink-500/10'}`}>
                       <p className="text-lg text-white font-medium">&quot;{response.response}&quot;</p>
+                      {response.aiGenerated && (
+                        <div className="mt-2">
+                          <Badge className="bg-cyan-500/20 text-cyan-400 border-cyan-500/50">
+                            <Sparkles className="w-3 h-3 mr-1" /> AI Generated
+                          </Badge>
+                        </div>
+                      )}
                     </div>
 
                     {/* Transaction Link */}
