@@ -1,5 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { historianData } from '@/lib/historians';
+import ZAI from 'z-ai-web-dev-sdk';
+
+// Rate limiting
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT = 10;
+const WINDOW = 60000;
+
+// Security patterns
+const BLOCKED_PATTERNS = [
+  /eval\s*\(/i, /document\.write/i, /<script/i, /javascript:/i,
+  /on\w+\s*=/i, /fetch\s*\(/i, /XMLHttpRequest/i,
+  /localStorage/i, /sessionStorage/i, /atob\s*\(/i, /btoa\s*\(/i,
+];
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const record = rateLimitMap.get(ip);
+  if (!record || now > record.resetTime) {
+    rateLimitMap.set(ip, { count: 1, resetTime: now + WINDOW });
+    return true;
+  }
+  if (record.count >= RATE_LIMIT) return false;
+  record.count++;
+  return true;
+}
+
+function validateInput(input: string): { valid: boolean; reason?: string } {
+  if (input.length < 2) return { valid: false, reason: 'Pickup line too short (min 2 chars)' };
+  if (input.length > 300) return { valid: false, reason: 'Pickup line too long (max 300 chars)' };
+  for (const pattern of BLOCKED_PATTERNS) {
+    if (pattern.test(input)) return { valid: false, reason: 'Invalid characters' };
+  }
+  return { valid: true };
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,6 +63,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Find historian
     const historian = historianData[historianIndex];
     if (!historian) {
       return NextResponse.json(
@@ -37,72 +72,117 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Simple response type - random roast or flirt
+    // Validate input
+    const validation = validateInput(pickupLine);
+    if (!validation.valid) {
+      return NextResponse.json({ error: validation.reason }, { status: 400 });
+    }
+
+    // Rate limiting
+    const ip = request.headers.get('x-forwarded-for') || 'unknown';
+    if (!checkRateLimit(ip)) {
+      return NextResponse.json({ error: 'Rate limit exceeded. Slow down!' }, { status: 429 });
+    }
+
+    // Response type - 70% roast, 30% flirt
     const isRoast = Math.random() < 0.7;
     
-    // Fallback responses based on historian
-    const responses: Record<string, { roast: string; flirt: string }> = {
-      'Satoshi Nakamoto': {
-        roast: "Your pickup line is as traceable as my identity. Nice try, but I'm unfindable and you're unforgettable... for the wrong reasons.",
-        flirt: "You've found the one thing rarer than my Bitcoin - my attention. Perhaps you're worthy of the genesis block."
-      },
-      'Vitalik Buterin': {
-        roast: "I've calculated 47 proofs why this won't work. Your game has more bugs than Solidity 0.4.0.",
-        flirt: "Our chemistry is more stable than Ethereum 2.0 staking. Let me shard my heart with you."
-      },
-      'Cleopatra': {
-        roast: "You bring less value than dust under my chariot. I had Roman EMPERORS begging, and you offer THIS?",
-        flirt: "I've conquered Egypt, but you've conquered my heart. Let me show you my chambers."
-      },
-      'Do Kwon': {
-        roast: "Your line has the stability of my LUNA after depeg. I've seen better in worthless rugpulls.",
-        flirt: "Let's go to the moon together - this time we won't crash!"
-      },
-      'CZ (Changpeng Zhao)': {
-        roast: "Your line was delisted due to lack of liquidity. Funds SAFU, but your game NOT.",
-        flirt: "You're the BNB to my Binance - native and burning bright. Let's trade hearts."
-      },
-      'Sam Bankman-Fried': {
-        roast: "Your line is worth more than my FTT token... which says nothing. I'm in prison with better options.",
-        flirt: "I may be behind bars, but my heart is open for deposits. Visit me for unlimited withdrawals!"
-      },
-      'Elon Musk': {
-        roast: "Your attempt is less valuable than my tweets. Even my AI thinks you're basic.",
-        flirt: "Want to see my rocket? It's reusable like my heart for you."
-      },
-      'Charles Hoskinson': {
-        roast: "Your line needs 5 more years of peer review. 47 papers prove this won't work.",
-        flirt: "I've published a whitepaper on our compatibility. The math checks out."
-      },
-      'William Shakespeare': {
-        roast: "Thou art a boil! Thy line is such that fools would weep. Away, peasant!",
-        flirt: "Shall I compare thee to a summer's day? Thou art more lovely by far."
-      },
-      'Albert Einstein': {
-        roast: "Your approach moves slower than light in a black hole. E=mc2, your game equals zero.",
-        flirt: "Time dilates when I'm with you. Our attraction is stronger than gravity."
-      },
-      'Catherine the Great': {
-        roast: "You offer me WHAT? You're not fit to polish my throne! My horse has more grace.",
-        flirt: "I conquered half of Europe, but you've conquered me completely."
-      },
-      'Leonardo da Vinci': {
-        roast: "Your proportions are all wrong! The Vitruvian Man has better symmetry.",
-        flirt: "You have the smile of my Mona Lisa - mysterious and captivating."
+    let response: string;
+    let usedAI = false;
+
+    // Try AI first
+    try {
+      const zai = await ZAI.create();
+      const prompt = `You are ${historian.name}, ${historian.title}. Personality: ${historian.personality.slice(0, 200)}
+
+The user said: "${pickupLine}"
+
+You must ${isRoast ? 'ROAST' : 'FLIRT BACK TO'} this pickup line in your unique voice.
+${isRoast ? 'Be savage, witty, and devastating. Make it memorable.' : 'Be seductive, charming, and flirty. Make them feel special.'}
+
+Keep it under 2 sentences. Stay in character. Be creative!`;
+
+      const completion = await zai.chat.completions.create({
+        messages: [
+          { role: 'system', content: prompt },
+          { role: 'user', content: pickupLine }
+        ],
+        temperature: 0.9,
+        max_tokens: 150
+      });
+
+      const aiResponse = completion.choices[0]?.message?.content?.trim();
+      if (aiResponse && aiResponse.length > 10 && aiResponse.length < 250) {
+        response = aiResponse;
+        usedAI = true;
+      } else {
+        throw new Error('AI response invalid');
       }
-    };
+    } catch {
+      // Fallback to static responses
+      const fallbacks: Record<string, { roast: string; flirt: string }> = {
+        'Satoshi Nakamoto': {
+          roast: "Your pickup line is as traceable as my identity. Nice try.",
+          flirt: "You found something rarer than my Bitcoin - my attention."
+        },
+        'Vitalik Buterin': {
+          roast: "I've calculated 47 proofs why this won't work.",
+          flirt: "Our chemistry is more stable than Ethereum 2.0 staking."
+        },
+        'Cleopatra': {
+          roast: "You bring less value than dust under my chariot.",
+          flirt: "I've conquered Egypt, but you've conquered my heart."
+        },
+        'Do Kwon': {
+          roast: "Your line has stability of my LUNA after depeg.",
+          flirt: "Let's go to moon together - this time no crash!"
+        },
+        'CZ (Changpeng Zhao)': {
+          roast: "Your line was delisted due to lack of liquidity.",
+          flirt: "You're the BNB to my Binance - essential and burning."
+        },
+        'Sam Bankman-Fried': {
+          roast: "Your line worth more than my FTT token... says nothing.",
+          flirt: "My heart open for deposits. Visit for unlimited withdrawals!"
+        },
+        'Elon Musk': {
+          roast: "Less valuable than my tweets. Even my AI thinks you're basic.",
+          flirt: "Want to see my rocket? It's reusable for you."
+        },
+        'Charles Hoskinson': {
+          roast: "Needs 5 years peer review.",
+          flirt: "I've published a whitepaper on our compatibility."
+        },
+        'William Shakespeare': {
+          roast: "Thou art a boil! Away, peasant!",
+          flirt: "Shall I compare thee to a summer's day?"
+        },
+        'Albert Einstein': {
+          roast: "Your approach slower than light in black hole.",
+          flirt: "Time dilates when I'm with you."
+        },
+        'Catherine the Great': {
+          roast: "Not fit to polish my throne!",
+          flirt: "I've conquered Europe, but you've conquered me."
+        },
+        'Leonardo da Vinci': {
+          roast: "Your proportions all wrong!",
+          flirt: "You have smile of my Mona Lisa."
+        }
+      };
 
-    const historianResponses = responses[historian.name] || {
-      roast: "That pickup line was historically bad. Better luck next time!",
-      flirt: "You have piqued my interest! Perhaps we shall write history together."
-    };
-
-    const response = isRoast ? historianResponses.roast : historianResponses.flirt;
+      const fb = fallbacks[historian.name] || {
+        roast: "Historically bad pickup line. Try again!",
+        flirt: "You've piqued my interest!"
+      };
+      response = isRoast ? fb.roast : fb.flirt;
+    }
 
     return NextResponse.json({
       success: true,
       response,
       responseType: isRoast ? 'roast' : 'flirt',
+      aiGenerated: usedAI,
       historian: {
         name: historian.name,
         emoji: historian.emoji,
