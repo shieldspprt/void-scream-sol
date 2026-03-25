@@ -1,113 +1,204 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { historianData } from '@/lib/historians';
+import ZAI from 'z-ai-web-dev-sdk';
 
 // Response type probabilities - 70% roast, 30% flirt
 const getResponseType = () => Math.random() < 0.7 ? 'roast' : 'flirt';
 
-// Pre-written responses for each historian (no AI needed as fallback)
+// Rate limiting - simple in-memory store (use Redis in production)
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT = 10; // requests per minute
+const RATE_WINDOW = 60 * 1000; // 1 minute
+
+// Content moderation - blocked keywords
+const BLOCKED_KEYWORDS = [
+  'kill', 'murder', 'die', 'death', 'suicide', 'terrorist', 'bomb', 'attack',
+  'rape', 'molest', 'abuse', 'child', 'minor', 'porn', 'sex', 'nude', 'naked',
+  'cp', 'gore', 'violence', 'hate', 'nazi', 'hitler', 'racist', 'slur',
+  'address', 'password', 'ssn', 'social security', 'credit card', 'cvv',
+  'dox', 'swat', 'hack', 'exploit', 'ddos', 'phishing', 'scam'
+];
+
+// Check rate limit
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const record = rateLimitMap.get(ip);
+  
+  if (!record || now > record.resetTime) {
+    rateLimitMap.set(ip, { count: 1, resetTime: now + RATE_WINDOW });
+    return true;
+  }
+  
+  if (record.count >= RATE_LIMIT) {
+    return false;
+  }
+  
+  record.count++;
+  return true;
+}
+
+// Validate content for harmful material
+function validateContent(text: string): { valid: boolean; error?: string } {
+  // Check length
+  if (!text || text.trim().length === 0) {
+    return { valid: false, error: 'Pickup line is required' };
+  }
+  
+  if (text.length > 200) {
+    return { valid: false, error: 'Pickup line too long (max 200 characters)' };
+  }
+  
+  if (text.length < 3) {
+    return { valid: false, error: 'Pickup line too short' };
+  }
+  
+  // Check for blocked keywords
+  const lowerText = text.toLowerCase();
+  for (const keyword of BLOCKED_KEYWORDS) {
+    if (lowerText.includes(keyword)) {
+      return { valid: false, error: 'Content contains inappropriate material' };
+    }
+  }
+  
+  // Check for URLs (prevent spam/linking)
+  const urlRegex = /(https?:\/\/|www\.)[^\s]+/i;
+  if (urlRegex.test(text)) {
+    return { valid: false, error: 'Links are not allowed in pickup lines' };
+  }
+  
+  // Check for excessive caps (yelling)
+  const capsRatio = (text.match(/[A-Z]/g) || []).length / text.length;
+  if (capsRatio > 0.7 && text.length > 10) {
+    return { valid: false, error: 'Please don\'t shout' };
+  }
+  
+  // Check for repeated characters (spam)
+  const repeatedCharRegex = /(.)\1{5,}/;
+  if (repeatedCharRegex.test(text)) {
+    return { valid: false, error: 'Invalid input detected' };
+  }
+  
+  return { valid: true };
+}
+
+// Fallback responses by historian
 const fallbackResponses: Record<string, { roast: string[]; flirt: string[] }> = {
   'Cleopatra': {
     roast: [
-      "Charming. I had 14 lovers and two empires. You have... what, exactly? A pickup line and a dream?",
-      "I ruled Egypt while you struggle to rule your own emotions. Come back when you've conquered something.",
-      "Caesar crossed the Rubicon for me. You can't even cross the room without stumbling."
+      "My dear, I've had better pickup lines from my palace cats. At least they purr with sincerity.",
+      "You approach me with that? I ruled Egypt, child. Bring me gold, not rust.",
+      "Charming. I haven't heard such mediocrity since Marc Antony's drinking songs."
     ],
     flirt: [
-      "A pyramid scheme I actually want to invest in. Consider this your invitation to my royal chamber.",
-      "You intrigue me more than Mark Antony ever did. Shall we discuss empires... privately?",
-      "Finally, someone worthy of the throne. I might just make you my 15th."
+      "Oh, you smooth-talking mortal! You remind me of Caesar's charm... but with better timing.",
+      "Perhaps I could use another admirer in my court. Tell me more over some imported wine.",
+      "You've caught the Pharaoh's eye. Such boldness deserves a royal reward..."
     ]
   },
   'Einstein': {
     roast: [
-      "E=mc² describes energy, not your pickup skills. The mass of your approach is... disappointingly light.",
-      "According to relativity, time slows near massive objects. Your line is so lightweight, time didn't notice.",
-      "I developed the theory of relativity. You're relatively... unimpressive."
+      "Relative to other pickup lines, yours moves at the speed of light... away from success.",
+      "E=mc², but your charm equals zero. Try again with more energy.",
+      "Space-time is curved, but your approach is painfully linear."
     ],
     flirt: [
-      "You've created a gravitational pull stronger than any black hole. I'm drawn to your event horizon.",
-      "Our chemistry has more energy than nuclear fusion. Let's explore this reaction further.",
-      "Space and time bend around you. You've warped my reality completely."
+      "Our chemistry could power a thousand suns! Let me show you my unified theory... of us.",
+      "You make my heart race faster than light. Relatively speaking, you're perfect.",
+      "In an infinite universe of possibilities, I'm glad our paths have intersected."
     ]
   },
   'Aristotle': {
     roast: [
-      "Your logic has more holes than my theories after 2000 years of scientific progress.",
-      "I defined virtue. You defined... awkwardness. This is not the good life.",
-      "All men desire to know. Yet you desire... this? Philosophy weeps."
+      "Logically speaking, your premises are flawed and your conclusion is... solitude.",
+      "The unexamined pickup line is not worth using. Yours requires much examination.",
+      "According to my Nicomachean Ethics, that was neither virtuous nor effective."
     ],
     flirt: [
-      "Your beauty is the final cause of my existence. Everything in nature exists for you.",
-      "In the hierarchy of beings, you are the unmoved mover of my heart.",
-      "Virtue is the golden mean, and you are perfectly balanced excellence."
+      "You embody the golden mean of beauty and wit. Shall we pursue eudaimonia together?",
+      "My philosophy has always sought truth, and I've found it in your eyes.",
+      "Let us walk together in the Lyceum gardens and discuss the nature of love."
     ]
   },
   'Tesla': {
     roast: [
-      "My alternating current powers cities. Your current energy level couldn't power a lightbulb.",
-      "I invented wireless transmission. Your signals aren't reaching my frequency.",
-      "1500 patents and revolutionary technology. You have... a pickup line. Groundbreaking."
+      "Your pickup line has less energy than my unappreciated Wardenclyffe tower.",
+      "Alternating current? More like alternating between bad and worse.",
+      "Edison would steal that line just to discredit it."
     ],
     flirt: [
-      "You've created a resonance in my coils that oscillates at the frequency of love.",
-      "Our connection is stronger than any wireless transmission I've ever conceived.",
-      "You electrify me more than 10,000 volts. Consider my heart fully charged."
+      "You resonate with my frequency! Our connection could wirelessly power the world.",
+      "My coils have never sparked like this before. You electrify my very soul.",
+      "Forget free energy - you're the only power source I need."
     ]
   },
   'Shakespeare': {
     roast: [
-      "Shall I compare thee to a summer's day? Thou art more wilted and less temperate.",
-      "A rose by any other name would smell as sweet. You, however, do not.",
-      "To be or not to be? With that line, definitely not to be."
+      "Thou art as welcome as a flea at a royal banquet. Away with thee!",
+      "To date or not to date? With that line, definitely NOT.",
+      "Methinks thou dost try too hard. Simplicity is the soul of wit."
     ],
     flirt: [
-      "Let me write you a sonnet that will outlive us both. You are my immortal beloved.",
-      "If music be the food of love, you are a symphony that nourishes my soul.",
-      "My words have moved millions, but you move me more than all my plays combined."
+      "Shall I compare thee to a summer's day? Thou art more lovely and more temperate!",
+      "All the world's a stage, and I want you to be my leading lady.",
+      "My love for thee is infinite, boundless as the sea. Say you'll be mine!"
     ]
   },
   'Mozart': {
     roast: [
-      "I composed 600 works by age 35. You've composed... one pickup line. And it's dissonant.",
-      "That line has no harmony, no rhythm, and definitely no crescendo. Fortissimo NO.",
-      "Even my worst compositions had better structure than your approach."
+      "That pickup line was like a symphony... in the key of F-flat FAILURE.",
+      "I've heard better melodies from street buskers. Try again, amateur.",
+      "Your timing is off, your pitch is flat. Stick to the audience, not the stage."
     ],
     flirt: [
-      "You've struck a chord in my heart that resonates like the overture to Don Giovanni.",
-      "Our duet would be the greatest composition of the classical era. Shall we rehearse?",
-      "You are the music, and I am merely the instrument you play so masterfully."
+      "You've struck a chord in my heart! Let's compose a love duet together.",
+      "My heart beats in 4/4 time whenever you're near. Dance with me?",
+      "You inspire me more than any muse. Let's make beautiful music together!"
     ]
   },
   'Napoleon': {
     roast: [
-      "I conquered Europe. You conquered... my patience. Waterloo was less humiliating.",
-      "Your strategic approach needs revision. This is not how one builds an empire.",
-      "I placed my crown on my own head. You can't even place a decent pickup line."
+      "I have conquered Europe, and yet you cannot conquer a conversation.",
+      "Retreat! Your forces are clearly outmatched. Better luck at Waterloo.",
+      "That was a strategic disaster. I would exile you to Elba for that."
     ],
     flirt: [
-      "I would conquer the world again just to lay it at your feet. Josephine who?",
-      "Surrender to me? No, I surrender to you. My empire is yours to command.",
-      "An army marches on its stomach, but my heart marches only for you."
+      "I see victory in your eyes! Together we shall build an empire of love.",
+      "You have captured my heart without firing a single shot. Brilliant strategy!",
+      "Josephine who? You shall be my new empress. All of Europe will envy us!"
     ]
   },
   'Da Vinci': {
     roast: [
-      "I painted the Mona Lisa and designed flying machines. You're painting... a sad picture.",
-      "Your proportions are all wrong. Vitruvian Man has better symmetry than your approach.",
-      "I sketched helicopters 500 years before they existed. You couldn't sketch a decent date."
+      "That approach lacks perspective, proportion, and quite frankly, genius.",
+      "I've painted the Mona Lisa, designed flying machines, but I cannot fix that line.",
+      "Vitruvian Man has perfect proportions. Your pickup line does not."
     ],
     flirt: [
-      "You are the masterpiece I've been searching for all my life. Let me study your beauty.",
-      "If I painted you, the canvas would blush. You are beyond any artistic representation.",
-      "My notebooks are filled with inventions, but you're the only discovery that matters."
+      "You are a masterpiece worthy of the Louvre! May I sketch your beauty?",
+      "Our love would be the greatest invention since... well, since all my inventions!",
+      "I've studied anatomy, but your beauty defies all scientific understanding."
     ]
   }
 };
 
 export async function POST(request: NextRequest) {
   try {
-    const { pickupLine, historianId, walletAddress } = await request.json();
+    // Get client IP for rate limiting
+    const ip = request.headers.get('x-forwarded-for') || 
+               request.headers.get('x-real-ip') || 
+               'unknown';
+    
+    // Check rate limit
+    if (!checkRateLimit(ip)) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        { status: 429 }
+      );
+    }
+    
+    const { pickupLine, historianId, walletAddress, txSignature } = await request.json();
 
+    // Validate inputs
     if (!pickupLine || !historianId) {
       return NextResponse.json(
         { error: 'Pickup line and historian are required' },
@@ -115,10 +206,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Find historian from static data
+    // Content validation
+    const validation = validateContent(pickupLine);
+    if (!validation.valid) {
+      return NextResponse.json(
+        { error: validation.error },
+        { status: 400 }
+      );
+    }
+
+    // Find historian
     const historian = historianData.find(h => 
-      historianId.includes(h.name.toLowerCase()) || 
-      historianId === h.name.toLowerCase().replace(/\s+/g, '-')
+      h.name.toLowerCase().replace(/\s+/g, '-') === historianId ||
+      h.name === historianId
     );
 
     if (!historian) {
@@ -130,18 +230,11 @@ export async function POST(request: NextRequest) {
 
     // Determine response type
     const responseType = getResponseType();
-    
-    // Get pre-written response
-    const responses = fallbackResponses[historian.name];
-    const responseList = responses ? responses[responseType] : null;
-    const response = responseList 
-      ? responseList[Math.floor(Math.random() * responseList.length)]
-      : `${historian.name} seems speechless...`;
 
-    // Try AI if available, otherwise use fallback
-    let finalResponse = response;
+    let response: string;
+
+    // Try AI first, fallback to static responses
     try {
-      const ZAI = (await import('z-ai-web-dev-sdk')).default;
       const zai = await ZAI.create();
       
       const systemPrompt = `You are ${historian.name}, the famous ${historian.era} figure known as "${historian.title}".
@@ -151,15 +244,14 @@ Your personality: ${historian.personality}
 ${responseType === 'roast' ? `
 You must ROAST this pickup line in your unique style!
 Roast style: ${historian.roastStyle}
-Be witty, clever, and devastatingly funny. Make it memorable but not cruel. Keep it under 2-3 sentences.
+Be witty, clever, and devastatingly funny. Keep it under 2 sentences.
 ` : `
 You must respond with a FLIRTY YES to this pickup line!
 Flirt style: ${historian.flirtStyle}
-Be seductive, charming, and make them feel special. Show genuine interest. Keep it under 2-3 sentences.
+Be seductive, charming. Keep it under 2 sentences.
 `}
 
-Stay completely in character as ${historian.name}. Use references to your era, work, and famous quotes when appropriate.
-Be creative and memorable - your response might be shared on social media!`;
+Stay completely in character as ${historian.name}. Use era-appropriate references. Be memorable and quotable.`;
 
       const completion = await zai.chat.completions.create({
         messages: [
@@ -167,22 +259,28 @@ Be creative and memorable - your response might be shared on social media!`;
           { role: 'user', content: pickupLine }
         ],
         temperature: 0.9,
-        max_tokens: 150
+        max_tokens: 120
       });
 
-      const aiResponse = completion.choices[0]?.message?.content?.trim();
-      if (aiResponse) {
-        finalResponse = aiResponse;
+      response = completion.choices[0]?.message?.content?.trim() || '';
+      
+      // Validate AI response isn't empty or too long
+      if (!response || response.length > 300) {
+        throw new Error('Invalid AI response');
       }
+      
     } catch (aiError) {
-      // AI failed, use pre-written fallback
-      console.log('AI SDK failed, using fallback response:', aiError);
+      console.log('AI failed, using fallback response');
+      // Use fallback response
+      const fallbacks = fallbackResponses[historian.name];
+      const responses = responseType === 'roast' ? fallbacks.roast : fallbacks.flirt;
+      response = responses[Math.floor(Math.random() * responses.length)];
     }
 
     return NextResponse.json({
       success: true,
-      submissionId: `local-${Date.now()}`,
-      response: finalResponse,
+      submissionId: `ylx-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      response,
       responseType,
       historian: {
         name: historian.name,
@@ -194,7 +292,7 @@ Be creative and memorable - your response might be shared on social media!`;
   } catch (error) {
     console.error('Error processing pickup line:', error);
     return NextResponse.json(
-      { error: 'Failed to process pickup line' },
+      { error: 'Failed to process pickup line. Please try again.' },
       { status: 500 }
     );
   }

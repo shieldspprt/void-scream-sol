@@ -285,7 +285,7 @@ export default function Home() {
 
 ${response.responseType === 'roast' ? '🔥' : '💕'} ${selectedHistorian.emoji} ${response.response}
 
-Try your luck at Historian Pickup!`;
+Try your luck at Yellex! https://yellex.fun`;
 
     const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
     window.open(url, '_blank');
@@ -336,7 +336,7 @@ Try your luck at Historian Pickup!`;
             </div>
             <h1 className="text-3xl md:text-4xl font-bold">
               <span className="bg-gradient-to-r from-pink-400 via-purple-400 to-amber-400 bg-clip-text text-transparent">
-                Historian Pickup
+                Yellex
               </span>
             </h1>
           </div>
@@ -471,10 +471,9 @@ Try your luck at Historian Pickup!`;
                 </label>
 
                 <Button
-                  variant="outline"
                   onClick={handleSuggest}
                   disabled={isSuggesting}
-                  className="w-full border-slate-600 text-slate-200 hover:text-white hover:bg-slate-700 hover:border-slate-500"
+                  className="w-full bg-slate-700 hover:bg-slate-600 text-white border border-slate-500 font-medium"
                 >
                   {isSuggesting ? (
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
