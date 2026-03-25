@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
     let response: string;
     let usedAI = false;
 
-    // Try AI first
+    // Try AI first with better error handling
     try {
       const zai = await ZAI.create();
       const prompt = `You are ${historian.name}, ${historian.title}. Personality: ${historian.personality.slice(0, 200)}
@@ -118,7 +118,8 @@ Keep it under 2 sentences. Stay in character. Be creative!`;
       } else {
         throw new Error('AI response invalid');
       }
-    } catch {
+    } catch (error: any) {
+      console.error('AI error:', error);
       // Fallback to static responses
       const fallbacks: Record<string, { roast: string; flirt: string }> = {
         'Satoshi Nakamoto': {
