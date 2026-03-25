@@ -258,8 +258,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
-    const { pickupLine, historianId } = body;
+    const { pickupLine, historianId, walletAddress } = await request.json();
 
     // Validate required fields
     if (!pickupLine || !historianId) {
@@ -269,21 +268,38 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Find historian - flexible lookup by ID format or name
+    let historian = historianData.find((h, i) => {
+      const expectedId = `historian-${i}`;
+      return expectedId === historianId || h.name === historianId;
+    });
+    
+    // If not found by ID, try to match by partial ID or name
+    if (!historian) {
+      historian = historianData.find(h => {
+        // Try exact name match
+        if (h.name === historianId) return true;
+        // Try if historianId includes the name
+        if (historianId.toLowerCase().includes(h.name.toLowerCase())) return true;
+        return false;
+      });
+    }
+    
+    if (!historian) {
+      console.error('Historian not found for ID:', historianId);
+      console.error('Available historians:', historianData.map((h, i) => `historian-${i}: ${h.name}`));
+      return NextResponse.json(
+        { error: 'Historian not found' },
+        { status: 404 }
+      );
+    }
+
     // Security: Validate input
     const validation = validateInput(pickupLine);
     if (!validation.valid) {
       return NextResponse.json(
         { error: validation.reason },
         { status: 400 }
-      );
-    }
-
-    // Find historian
-    const historian = historianData.find((h, i) => `historian-${i}` === historianId);
-    if (!historian) {
-      return NextResponse.json(
-        { error: 'Historian not found' },
-        { status: 404 }
       );
     }
 

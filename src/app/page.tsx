@@ -56,7 +56,7 @@ const PRICE_SOL = 0.001;
 const FREE_ATTEMPTS = 3;
 
 export default function Home() {
-  const { publicKey, connected } = useWallet();
+  const { publicKey, connected, signTransaction } = useWallet();
   const [historians, setHistorians] = useState<Historian[]>([]);
   const [selectedHistorian, setSelectedHistorian] = useState<Historian | null>(null);
   const [pickupLine, setPickupLine] = useState('');
@@ -165,8 +165,8 @@ export default function Home() {
         feePayer: publicKey,
       });
 
-      // Treasury wallet - REPLACE WITH YOUR WALLET ADDRESS
-      const treasuryAddress = new PublicKey('GXm1WcZp1c7ekS1D2rWwBcpHW4qE8EFu7Ns7wzXsPQe');
+      // Treasury wallet - fee collection address
+      const treasuryAddress = new PublicKey('DD4AdYKVcV6kgpmiCEeASRmJyRdKgmaRAbsjKucx8CvY');
       
       // Convert SOL to lamports
       const lamports = Math.floor(PRICE_SOL * LAMPORTS_PER_SOL);
@@ -180,17 +180,12 @@ export default function Home() {
         })
       );
 
-      // Request signature from wallet
-      const { signTransaction } = await import('@solana/wallet-adapter-react').then(m => m.useWallet());
-      
-      // Get wallet adapter
-      const walletAdapter = (window as any).solana;
-      if (!walletAdapter) {
-        throw new Error('Wallet not found');
+      // Sign transaction using wallet adapter
+      if (!signTransaction) {
+        throw new Error('Wallet does not support signing');
       }
 
-      // Sign and send transaction
-      const signed = await walletAdapter.signTransaction(transaction);
+      const signed = await signTransaction(transaction);
       const signature = await connection.sendRawTransaction(signed.serialize());
       
       // Confirm transaction
