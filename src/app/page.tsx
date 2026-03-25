@@ -68,9 +68,15 @@ export default function Home() {
   // Fetch historians
   useEffect(() => {
     fetch('/api/historians')
-      .then(res => res.json())
-      .then(data => setHistorians(data))
+      .then(async res => {
+        if (!res.ok) throw new Error('Failed to fetch');
+        const data = await res.json();
+        // Validate that data is an array
+        if (!Array.isArray(data)) throw new Error('Invalid data format');
+        setHistorians(data);
+      })
       .catch(() => {
+        // Fallback to static data with IDs
         setHistorians(historianData.map((h, i) => ({ ...h, id: `static-${i}` })));
       });
   }, []);
