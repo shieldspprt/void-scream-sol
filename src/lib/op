@@ -1,0 +1,76 @@
+// OpenRouter client - FREE models only
+// Fast timeout to avoid 502 errors
+
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || '';
+const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
+
+// Free models - ordered by speed/reliability
+const FREE_MODELS = [
+  'minimax/minimax-m2.5:free',              // Fastest, most reliable
+  'nvidia/nemotron-3-super-120b-a12b:free', // Highest quality but slower
+];
+
+export interface ChatMessage {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+}
+
+export async function chatWithAI(
+  messages: ChatMessage[],
+  maxTokens: number = 150
+): Promise<{ content: string; model: string }> {
+  
+  if (!OPENROUTER_API_KEY) {
+    throw new Error('OpenRouter API key not configured');
+  }
+
+  // Try each model with 8 second timeout (Netlify limit is 10s)
+  for (const model of FREE_MODELS) {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 8000);
+
+      const response = await fetch(OPENROUTER_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+          'HTTP-Referer': 'https://yellex.fun',
+          'X-Title': 'Yellex',
+        },
+        body: JSON.stringify({
+          model: model,
+          messages: messages,
+          max_tokens: maxTokens,
+          temperature: 0.9,
+        }),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeout);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.warn(`[OpenRouter] ${model} failed:`, response.status, errorText.slice(0, 100));
+        continue;
+      }
+
+      const data = await response.json();
+      const content = data.choices?.[0]?.message?.content?.trim();
+      
+      if (content && content.length > 5) {
+        console.log('[OpenRouter] Success with', model);
+        return { content, model };
+      }
+    } catch (err: any) {
+      if (err.name === 'AbortError') {
+        console.warn(`[OpenRouter] ${model} timed out`);
+      } else {
+        console.warn(`[OpenRouter] ${model} error:`, err.message);
+      }
+      continue;
+    }
+  }
+
+  throw new Error('All AI models failed - no fallback available');
+}

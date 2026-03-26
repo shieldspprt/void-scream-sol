@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { historianData } from '@/lib/historians';
 import { chatWithAI } from '@/lib/openrouter';
 
 const
