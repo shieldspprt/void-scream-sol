@@ -153,11 +153,11 @@ export default function Home() {
       // Dynamic import for Solana
       const { Connection, Transaction, SystemProgram, LAMPORTS_PER_SOL, PublicKey } = await import('@solana/web3.js');
       
-      // Connect to Solana (devnet for testing)
-      const connection = new Connection('https://api.devnet.solana.com', 'confirmed');
+      // Connect to Solana (mainnet for production)
+      const connection = new Connection('https://api.mainnet-beta.solana.com', 'confirmed');
       
-      // Get latest blockhash
-      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+      // Get latest blockhash with commitment
+      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed');
       
       // Create transaction
       const transaction = new Transaction({
@@ -684,7 +684,7 @@ Try your luck at Yellex! https://yellex.fun`;
                     {txSignature && (
                       <div className="mt-4 text-center">
                         <a 
-                          href={`https://explorer.solana.com/tx/${txSignature}?cluster=devnet`}
+                          href={`https://explorer.solana.com/tx/${txSignature}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-sm text-purple-400 hover:text-purple-300 flex items-center justify-center gap-1"
