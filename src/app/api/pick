@@ -1,0 +1,197 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { historianData } from '@/lib/historians';
+import { createChatCompletion, rotateModel } from '@/lib/openrouter';
+
+// Rate limiting
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT = 20; // 20 requests per minute
+const WINDOW = 60000;
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const record = rateLimitMap.get(ip);
+  if (!record || now > record.resetTime) {
+    rateLimitMap.set(ip, { count: 1, resetTime: now + WINDOW });
+    return true;
+  }
+  if (record.count >= RATE_LIMIT) return false;
+  record.count++;
+  return true;
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { pickupLine, historianId } = body;
+
+    if (!pickupLine || !historianId) {
+      return NextResponse.json(
+        { error: 'Missing pickupLine or historianId' },
+        { status: 400 }
+      );
+    }
+
+    // Find historian
+    let historianIndex = -1;
+    const match = historianId.match(/historian-(\d+)|static-(\d+)/);
+    if (match) {
+      historianIndex = parseInt(match[1] || match[2], 10);
+    }
+
+    if (historianIndex === -1 || historianIndex >= historianData.length) {
+      return NextResponse.json(
+        { error: 'Historian not found' },
+        { status: 404 }
+      );
+    }
+
+    const historian = historianData[historianIndex];
+
+    // Rate limiting
+    const ip = request.headers.get('x-forwarded-for') || 'unknown';
+    if (!checkRateLimit(ip)) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Slow down!' },
+        { status: 429 }
+      );
+    }
+
+    // Response type - 70% roast, 30% flirt
+    const isRoast = Math.random() < 0.7;
+
+    // Create system prompt
+    const systemPrompt = `You are ${historian.name}, ${historian.title}.
+
+Personality: ${historian.personality}
+
+${isRoast ? `
+ROAST MODE: Destroy this pickup line! Be savage, witty, and devastating.
+Roast style: ${historian.roastStyle}
+Make it memorable, clever, and brutal but not cruel.
+` : `
+FLIRT MODE: Respond with a FLIRTY YES! Be seductive and charming.
+Flirt style: ${historian.flirtStyle}
+Make them feel special and desired.
+`}
+
+Keep it 1-2 sentences. Stay in character as ${historian.name}.`;
+
+    // Try AI first with retry logic
+    let aiResponse: string | null = null;
+    let usedAI = false;
+    let attempts = 0;
+    const maxAttempts = 2;
+
+    while (attempts < maxAttempts && !aiResponse) {
+      try {
+        const model = rotateModel(); // Rotate between free models
+        console.log(`[AI] Attempt ${attempts + 1} with ${model}`);
+
+        const result = await createChatCompletion({
+          model,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: pickupLine }
+          ],
+          temperature: 0.9,
+          max_tokens: 150
+        });
+
+        aiResponse = result.choices[0]?.message?.content?.trim() || null;
+
+        if (aiResponse && aiResponse.length >= 10 && aiResponse.length <= 250) {
+          usedAI = true;
+          console.log(`[AI] Success with ${model}`);
+        } else {
+          throw new Error('Invalid response length');
+        }
+      } catch (err) {
+        console.error(`[AI] Attempt ${attempts + 1} failed:`, err);
+        attempts++;
+      }
+    }
+
+    // Use AI response or fallback
+    let response: string;
+    if (aiResponse && usedAI) {
+      response = aiResponse;
+    } else {
+      // Fallback responses
+      const fallbacks: Record<string, { roast: string; flirt: string }> = {
+        'Satoshi Nakamoto': {
+          roast: "Your pickup line is as traceable as my identity. Nice try, but I'm unfindable and you're unforgettable... for the wrong reasons.",
+          flirt: "You've found the one thing rarer than my Bitcoin - my attention. Perhaps you're worthy of the genesis block."
+        },
+        'Vitalik Buterin': {
+          roast: "I've calculated 47 proofs why this won't work. Your game is more broken than Solidity 0.4.0.",
+          flirt: "Our chemistry is more stable than Ethereum 2.0 staking rewards. I'd shard my heart with you."
+        },
+        'Cleopatra': {
+          roast: "You bring less value than the dust under my chariot. I had Roman EMPERORS fighting over me, and you offer... THIS?",
+          flirt: "I've conquered the Nile, but you've conquered my attention. Let's make history that even Caesar would be jealous of."
+        },
+        'Do Kwon': {
+          roast: "Your line has the stability of my LUNA after depeg. I've seen better in worthless rugpulls.",
+          flirt: "Let's go to the moon together - this time we won't crash! My love is more stable than my algorithm."
+        },
+        'CZ (Changpeng Zhao)': {
+          roast: "Your line was delisted due to lack of liquidity. Funds SAFU, but your game is NOT.",
+          flirt: "You're the BNB to my Binance - essential and burning bright. Let's trade hearts forever."
+        },
+        'Sam Bankman-Fried': {
+          roast: "Your line is worth more than my FTT token... which isn't saying much. I'm in prison and I still have better options.",
+          flirt: "My heart is open for deposits... unlimited withdrawals! Visit me in prison, I get lonely."
+        },
+        'Elon Musk': {
+          roast: "Less valuable than my tweets. Even my AI thinks you're basic. Stick to Earth, you're not ready for Mars.",
+          flirt: "Want to see my rocket? It's reusable for you. Let's go to Mars and start a civilization together!"
+        },
+        'Charles Hoskinson': {
+          roast: "Needs 5 more years of peer review. I've written 47 papers on why this won't work.",
+          flirt: "I've published a whitepaper on our compatibility. The mathematics check out perfectly."
+        },
+        'William Shakespeare': {
+          roast: "Thou art a boil, a plague sore, an embossed carbuncle! Away, thou damned doorkeeper!",
+          flirt: "Shall I compare thee to a summer's day? Thou art more lovely and more temperate."
+        },
+        'Albert Einstein': {
+          roast: "Your approach moves slower than light in a black hole. E=mc², your game equals zero.",
+          flirt: "Time dilates when I'm with you... in a good way. Our attraction is stronger than gravity."
+        },
+        'Catherine the Great': {
+          roast: "You offer me WHAT? You're not fit to polish my throne! My horse has more grace.",
+          flirt: "I conquered half of Europe, but you've conquered me completely. Come to my Winter Palace tonight."
+        },
+        'Leonardo da Vinci': {
+          roast: "Your proportions are all wrong! The Vitruvian Man has better symmetry than your approach.",
+          flirt: "You have the smile of my Mona Lisa - mysterious and captivating. Let me sketch your beauty."
+        }
+      };
+
+      const fb = fallbacks[historian.name] || {
+        roast: "Historically bad pickup line. Try again!",
+        flirt: "You've piqued my interest! Perhaps we shall write history together."
+      };
+      response = isRoast ? fb.roast : fb.flirt;
+    }
+
+    return NextResponse.json({
+      success: true,
+      response,
+      responseType: isRoast ? 'roast' : 'flirt',
+      aiGenerated: usedAI,
+      historian: {
+        name: historian.name,
+        emoji: historian.emoji,
+        color: historian.color
+      }
+    });
+
+  } catch (error: any) {
+    console.error('Pickup error:', error);
+    return NextResponse.json(
+      { error: 'Failed to process. Try again!' },
+      { status: 500 }
+    );
+  }
+}
