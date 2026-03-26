@@ -1,31 +1,43 @@
 'use client';
 
-import { FC, ReactNode, useMemo } from 'react';
+import { FC, ReactNode, useEffect, useMemo, useState } from 'react';
 import { ConnectionProvider, WalletProvider as SolanaWalletProvider } from '@solana/wallet-adapter-react';
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
 import { PhantomWalletAdapter, SolflareWalletAdapter } from '@solana/wallet-adapter-wallets';
 
-// Import wallet adapter CSS
 import '@solana/wallet-adapter-react-ui/styles.css';
 
 interface Props {
   children: ReactNode;
 }
 
-// Helius RPC - primary endpoint (requires API key for production)
-const HELIUS_RPC = process.env.NEXT_PUBLIC_HELIUS_RPC || 'https://mainnet.helius-rpc.com/?api-key=YOUR_API_KEY';
-
-// Fallback RPC endpoints (public, lower rate limits)
+// Fallback RPC endpoints if Helius fails
 const FALLBACK_RPCS = [
   'https://api.mainnet-beta.solana.com',
   'https://solana-api.projectserum.com',
+  'https://rpc.ankr.com/solana',
 ];
 
 export const WalletProvider: FC<Props> = ({ children }) => {
-  // Use Helius as primary, with explicit commitment
-  const endpoint = useMemo(() => HELIUS_RPC, []);
+  const [rpcUrl, setRpcUrl] = useState<string>(FALLBACK_RPCS[0]);
+  const [loading, setLoading] = useState(true);
 
-  // Configure supported wallets
+  useEffect(() => {
+    // Fetch RPC URL from secure API route
+    fetch('/api/rpc')
+      .then(res => res.json())
+      .then(data => {
+        if (data.rpc) {
+          setRpcUrl(data.rpc);
+          console.log('✅ Using Helius RPC');
+        }
+      })
+      .catch(() => {
+        console.warn('⚠️ Using fallback RPC');
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
   const wallets = useMemo(
     () => [
       new PhantomWalletAdapter(),
@@ -34,12 +46,16 @@ export const WalletProvider: FC<Props> = ({ children }) => {
     []
   );
 
+  if (loading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
+
   return (
     <ConnectionProvider 
-      endpoint={endpoint}
+      endpoint={rpcUrl}
       config={{ 
         commitment: 'confirmed',
-        wsEndpoint: undefined // Disable websocket to avoid issues
+        wsEndpoint: undefined
       }}
     >
       <SolanaWalletProvider wallets={wallets} autoConnect>
