@@ -4,7 +4,7 @@ import { useWallet, useConnection } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { useCallback, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Wallet, Loader2, Check } from 'lucide-react';
+import { Wallet, Loader2, Check, LogOut } from 'lucide-react';
 
 export const WalletConnectButton = () => {
   return (
@@ -12,8 +12,25 @@ export const WalletConnectButton = () => {
   );
 };
 
+export const WalletDisconnectButton = () => {
+  const { disconnect, connected } = useWallet();
+  
+  if (!connected) return null;
+  
+  return (
+    <Button 
+      onClick={disconnect}
+      variant="outline"
+      className="border-slate-600 bg-slate-800/50 text-slate-300 hover:text-white hover:bg-slate-700"
+    >
+      <LogOut className="w-4 h-4 mr-2" />
+      Disconnect
+    </Button>
+  );
+};
+
 interface PaymentButtonProps {
-  amount: number; // in SOL
+  amount: number;
   onPaymentSuccess: (signature: string) => void;
   onPaymentError: (error: string) => void;
   disabled?: boolean;
@@ -42,7 +59,7 @@ export const PaymentButton: React.FC<PaymentButtonProps> = ({
     
     try {
       // Import Solana web3.js functions
-      const { Transaction, SystemProgram, LAMPORTS_PER_SOL } = await import('@solana/web3.js');
+      const { Transaction, SystemProgram, LAMPORTS_PER_SOL, PublicKey, ComputeBudgetProgram } = await import('@solana/web3.js');
       
       // Get latest blockhash
       const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
@@ -53,17 +70,24 @@ export const PaymentButton: React.FC<PaymentButtonProps> = ({
         feePayer: publicKey,
       });
 
-      // Destination wallet - REPLACE THIS WITH YOUR WALLET ADDRESS
-      const destinationAddress = process.env.NEXT_PUBLIC_TREASURY_WALLET || 'YOUR_TREASURY_WALLET_ADDRESS_HERE';
+      // DD's wallet for fee collection
+      const destinationAddress = 'DD4AdYKVcV6kgpmiCEeASRmJyRdKgmaRAbsjKucx8CvY';
       
-      // Convert SOL to lamports (1 SOL = 1,000,000,000 lamports)
+      // Convert SOL to lamports
       const lamports = Math.floor(amount * LAMPORTS_PER_SOL);
 
-      // Add transfer instruction
+      // Add priority fee for faster confirmation
+      transaction.add(
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: 5000,
+        })
+      );
+
+      // Add transfer instruction with PROPER PublicKey
       transaction.add(
         SystemProgram.transfer({
           fromPubkey: publicKey,
-          toPubkey: { toBase58: () => destinationAddress } as any,
+          toPubkey: new PublicKey(destinationAddress),
           lamports,
         })
       );
@@ -74,7 +98,7 @@ export const PaymentButton: React.FC<PaymentButtonProps> = ({
       // Send transaction
       const signature = await connection.sendRawTransaction(
         signedTransaction.serialize(),
-        { skipPreflight: true }
+        { skipPreflight: false, preflightCommitment: 'confirmed' }
       );
 
       // Confirm transaction
@@ -82,7 +106,7 @@ export const PaymentButton: React.FC<PaymentButtonProps> = ({
         signature,
         blockhash,
         lastValidBlockHeight,
-      });
+      }, 'confirmed');
 
       setIsSuccess(true);
       onPaymentSuccess(signature);

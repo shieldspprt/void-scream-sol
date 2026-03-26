@@ -24,7 +24,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { historianData } from '@/lib/historians';
-import { WalletConnectButton } from '@/components/WalletButton';
+import { WalletConnectButton, WalletDisconnectButton } from '@/components/WalletButton';
 
 interface Historian {
   id: string;
@@ -405,6 +405,7 @@ Try your luck at Yellex! https://yellex.fun`;
               <div className="flex items-center gap-2 px-4 py-2 bg-slate-800/50 rounded-lg border border-slate-700/50">
                 <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
                 <span className="text-sm text-slate-300">{formatWalletAddress(publicKey.toBase58())}</span>
+                <WalletDisconnectButton />
               </div>
             ) : (
               <WalletConnectButton />
