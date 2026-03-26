@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, ReactNode, useEffect, useMemo, useState } from 'react';
+import { FC, ReactNode, useMemo } from 'react';
 import { ConnectionProvider, WalletProvider as SolanaWalletProvider } from '@solana/wallet-adapter-react';
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
 import { PhantomWalletAdapter, SolflareWalletAdapter } from '@solana/wallet-adapter-wallets';
@@ -11,32 +11,14 @@ interface Props {
   children: ReactNode;
 }
 
-// Fallback RPC endpoints if Helius fails
-const FALLBACK_RPCS = [
-  'https://api.mainnet-beta.solana.com',
-  'https://solana-api.projectserum.com',
-  'https://rpc.ankr.com/solana',
-];
+// Helius RPC using your API key from Netlify env
+const HELIUS_KEY = process.env.NEXT_PUBLIC_HELIUS_KEY;
+const HELIUS_RPC = HELIUS_KEY 
+  ? `https://mainnet.helius-rpc.com/?api-key=${HELIUS_KEY}`
+  : 'https://api.mainnet-beta.solana.com'; // Only fallback if key missing
 
 export const WalletProvider: FC<Props> = ({ children }) => {
-  const [rpcUrl, setRpcUrl] = useState<string>(FALLBACK_RPCS[0]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // Fetch RPC URL from secure API route
-    fetch('/api/rpc')
-      .then(res => res.json())
-      .then(data => {
-        if (data.rpc) {
-          setRpcUrl(data.rpc);
-          console.log('✅ Using Helius RPC');
-        }
-      })
-      .catch(() => {
-        console.warn('⚠️ Using fallback RPC');
-      })
-      .finally(() => setLoading(false));
-  }, []);
+  const endpoint = useMemo(() => HELIUS_RPC, []);
 
   const wallets = useMemo(
     () => [
@@ -46,17 +28,10 @@ export const WalletProvider: FC<Props> = ({ children }) => {
     []
   );
 
-  if (loading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
-  }
-
   return (
     <ConnectionProvider 
-      endpoint={rpcUrl}
-      config={{ 
-        commitment: 'confirmed',
-        wsEndpoint: undefined
-      }}
+      endpoint={endpoint}
+      config={{ commitment: 'confirmed' }}
     >
       <SolanaWalletProvider wallets={wallets} autoConnect>
         <WalletModalProvider>
