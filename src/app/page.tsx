@@ -203,12 +203,18 @@ export default function Home() {
       
       toast.loading('Confirming transaction...', { id: 'tx-confirm' });
       
-      // Confirm transaction with timeout
-      await connection.confirmTransaction({
+      // Confirm transaction with 10s timeout
+      const confirmPromise = connection.confirmTransaction({
         signature,
         blockhash,
         lastValidBlockHeight,
       }, 'confirmed');
+      
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Transaction confirmation timeout')), 10000)
+      );
+      
+      await Promise.race([confirmPromise, timeoutPromise]);
 
       toast.dismiss('tx-confirm');
       setTxSignature(signature);
