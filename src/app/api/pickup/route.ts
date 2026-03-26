@@ -1,186 +1,82 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { historianData } from '@/lib/historians';
-import ZAI from 'z-ai-web-dev-sdk';
 
-// Rate limiting
-const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
-const RATE_LIMIT = 10;
-const WINDOW = 60000;
+const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
+const FREE_MODELS = ['deepseek/deepseek-r1:free', 'meta-llama/llama-3.3-70b-instruct:free', 'qwen/qwen-2-7b-instruct:free'];
 
-// Security patterns
-const BLOCKED_PATTERNS = [
-  /eval\s*\(/i, /document\.write/i, /<script/i, /javascript:/i,
-  /on\w+\s*=/i, /fetch\s*\(/i, /XMLHttpRequest/i,
-  /localStorage/i, /sessionStorage/i, /atob\s*\(/i, /btoa\s*\(/i,
-];
-
-function checkRateLimit(ip: string): boolean {
-  const now = Date.now();
-  const record = rateLimitMap.get(ip);
-  if (!record || now > record.resetTime) {
-    rateLimitMap.set(ip, { count: 1, resetTime: now + WINDOW });
-    return true;
+async function fetchOpenRouter(systemPrompt: string, userMessage: string): Promise<string | null> {
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  if (!apiKey) return null;
+  
+  for (const model of FREE_MODELS) {
+    try {
+      const res = await fetch(`${OPENROUTER_BASE_URL}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': 'https://yellex.fun',
+          'X-Title': 'Yellex',
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userMessage }
+          ],
+          temperature: 0.95,
+          max_tokens: 150,
+        }),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const response = data.choices?.[0]?.message?.content?.trim();
+      if (response && response.length > 10) return response;
+    } catch { continue; }
   }
-  if (record.count >= RATE_LIMIT) return false;
-  record.count++;
-  return true;
-}
-
-function validateInput(input: string): { valid: boolean; reason?: string } {
-  if (input.length < 2) return { valid: false, reason: 'Pickup line too short (min 2 chars)' };
-  if (input.length > 300) return { valid: false, reason: 'Pickup line too long (max 300 chars)' };
-  for (const pattern of BLOCKED_PATTERNS) {
-    if (pattern.test(input)) return { valid: false, reason: 'Invalid characters' };
-  }
-  return { valid: true };
+  return null;
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { pickupLine, historianId } = body;
-
+    const { pickupLine, historianId } = await request.json();
     if (!pickupLine || !historianId) {
-      return NextResponse.json(
-        { error: 'Missing pickupLine or historianId' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Missing pickupLine or historianId' }, { status: 400 });
     }
 
-    // Find historian - be more flexible with ID matching
-    let historianIndex = -1;
-    
-    // Try historian-{index} format first
     const match = historianId.match(/historian-(\d+)|static-(\d+)/);
-    if (match) {
-      historianIndex = parseInt(match[1] || match[2], 10);
-    }
+    const historianIndex = match ? parseInt(match[1] || match[2], 10) : -1;
     
     if (historianIndex === -1 || historianIndex >= historianData.length) {
-      return NextResponse.json(
-        { error: 'Historian not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Historian not found' }, { status: 404 });
     }
 
-    // Find historian
     const historian = historianData[historianIndex];
-    if (!historian) {
-      return NextResponse.json(
-        { error: 'Historian not found' },
-        { status: 404 }
-      );
-    }
-
-    // Validate input
-    const validation = validateInput(pickupLine);
-    if (!validation.valid) {
-      return NextResponse.json({ error: validation.reason }, { status: 400 });
-    }
-
-    // Rate limiting
-    const ip = request.headers.get('x-forwarded-for') || 'unknown';
-    if (!checkRateLimit(ip)) {
-      return NextResponse.json({ error: 'Rate limit exceeded. Slow down!' }, { status: 429 });
-    }
-
-    // Response type - 70% roast, 30% flirt
     const isRoast = Math.random() < 0.7;
     
-    let response: string;
-    let usedAI = false;
-    let aiError: string | null = null;
-
-    // Try AI first with detailed logging
-    try {
-      console.log('[AI] Creating ZAI instance...');
-      const zai = await ZAI.create();
-      console.log('[AI] ZAI instance created successfully');
-      
-      const prompt = `You are ${historian.name}, ${historian.title}. Personality: ${historian.personality.slice(0, 200)}`;
-      console.log('[AI] Sending prompt:', prompt.slice(0, 100) + '...');
-      
-      const completion = await zai.chat.completions.create({
-        messages: [
-          { role: 'system', content: prompt },
-          { role: 'user', content: pickupLine }
-        ],
-        temperature: 0.9,
-        max_tokens: 150,
-        thinking: { type: 'disabled' }
-      });
-      
-      console.log('[AI] Got completion:', JSON.stringify(completion, null, 2));
-      
-      const aiResponse = completion.choices?.[0]?.message?.content?.trim();
-      if (aiResponse && aiResponse.length > 10 && aiResponse.length < 250) {
-        response = aiResponse;
-        usedAI = true;
-        console.log('[AI] Using AI response');
-      } else {
-        console.log('[AI] Invalid response, falling back');
-        throw new Error('AI response invalid');
-      }
-    } catch (err) {
-      console.error('[AI] ERROR:', err.message);
-      console.log('[AI] Falling back to static responses');
-      
-      // Fallback to static responses
+    const systemPrompt = `You are ${historian.name}, ${historian.title}. Personality: ${historian.personality.slice(0, 200)}. You must ${isRoast ? 'ROAST' : 'FLIRT BACK TO'} this pickup line. ${isRoast ? 'Be savage and witty (2-3 sentences).' : 'Be seductive and charming (2-3 sentences).'} Stay in character!`;
+    
+    // Try OpenRouter first
+    let response = await fetchOpenRouter(systemPrompt, pickupLine);
+    let usedAI = !!response;
+    
+    // Fallback if AI fails
+    if (!response) {
       const fallbacks: Record<string, { roast: string; flirt: string }> = {
-        'Satoshi Nakamoto': {
-          roast: "Your pickup line is as traceable as my identity. Nice try.",
-          flirt: "You found something rarer than my Bitcoin - my attention."
-        },
-        'Vitalik Buterin': {
-          roast: "I've calculated 47 proofs why this won't work.",
-          flirt: "Our chemistry is more stable than Ethereum 2.0 staking."
-        },
-        'Cleopatra': {
-          roast: "You bring less value than dust under my chariot.",
-          flirt: "I've conquered Egypt, but you've conquered my heart."
-        },
-        'Do Kwon': {
-          roast: "Your line has stability of my LUNA after depeg.",
-          flirt: "Let's go to moon together - this time no crash!"
-        },
-        'CZ (Changpeng Zhao)': {
-          roast: "Your line was delisted due to lack of liquidity.",
-          flirt: "You're the BNB to my Binance - essential and burning."
-        },
-        'Sam Bankman-Fried': {
-          roast: "Your line worth more than my FTT token... says nothing.",
-          flirt: "My heart open for deposits. Visit for unlimited withdrawals!"
-        },
-        'Elon Musk': {
-          roast: "Less valuable than my tweets. Even my AI thinks you're basic.",
-          flirt: "Want to see my rocket? It's reusable for you."
-        },
-        'Charles Hoskinson': {
-          roast: "Needs 5 years peer review.",
-          flirt: "I've published a whitepaper on our compatibility."
-        },
-        'William Shakespeare': {
-          roast: "Thou art a boil! Away, peasant!",
-          flirt: "Shall I compare thee to a summer's day?"
-        },
-        'Albert Einstein': {
-          roast: "Your approach slower than light in black hole.",
-          flirt: "Time dilates when I'm with you."
-        },
-        'Catherine the Great': {
-          roast: "Not fit to polish my throne!",
-          flirt: "I've conquered Europe, but you've conquered me."
-        },
-        'Leonardo da Vinci': {
-          roast: "Your proportions all wrong!",
-          flirt: "You have smile of my Mona Lisa."
-        }
+        'Satoshi Nakamoto': { roast: "Your pickup line is as traceable as my identity. Nice try.", flirt: "You've found something rarer than my Bitcoin - my attention." },
+        'Vitalik Buterin': { roast: "I've calculated 47 proofs why this won't work.", flirt: "Our chemistry is more stable than Ethereum 2.0 staking." },
+        'Cleopatra': { roast: "You bring less value than dust under my chariot.", flirt: "I've conquered Egypt, but you've conquered my heart." },
+        'Do Kwon': { roast: "Your line has the stability of my LUNA after depeg.", flirt: "Let's go to moon together - this time no crash!" },
+        'CZ (Changpeng Zhao)': { roast: "Your line was delisted due to lack of liquidity.", flirt: "You're the BNB to my Binance - essential." },
+        'Sam Bankman-Fried': { roast: "Your line is worth more than my FTT token... says nothing.", flirt: "My heart is open for deposits. Unlimited withdrawals!" },
+        'Elon Musk': { roast: "Your attempt is less valuable than my tweets.", flirt: "Want to see my rocket? It's reusable for you." },
+        'Charles Hoskinson': { roast: "Your line needs 5 years peer review.", flirt: "I've published a whitepaper on our compatibility." },
+        'Shakespeare': { roast: "Thou art a boil! Away, peasant!", flirt: "Shall I compare thee to a summer's day?" },
+        'Einstein': { roast: "Your approach slower than light in black hole.", flirt: "Time dilates when I'm with you." },
+        'Catherine the Great': { roast: "Not fit to polish my throne!", flirt: "I've conquered Europe, but you've conquered me." },
+        'Leonardo da Vinci': { roast: "Your proportions all wrong!", flirt: "You have smile of my Mona Lisa." }
       };
-
-      const fb = fallbacks[historian.name] || {
-        roast: "Historically bad pickup line. Try again!",
-        flirt: "You've piqued my interest!"
-      };
+      const fb = fallbacks[historian.name] || { roast: "Historically bad pickup line.", flirt: "You've piqued my interest!" };
       response = isRoast ? fb.roast : fb.flirt;
     }
 
@@ -189,18 +85,11 @@ export async function POST(request: NextRequest) {
       response,
       responseType: isRoast ? 'roast' : 'flirt',
       aiGenerated: usedAI,
-      historian: {
-        name: historian.name,
-        emoji: historian.emoji,
-        color: historian.color
-      }
+      historian: { name: historian.name, emoji: historian.emoji, color: historian.color }
     });
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('Pickup error:', error);
-    return NextResponse.json(
-      { error: 'Failed to process. Try again!' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to process' }, { status: 500 });
   }
 }
