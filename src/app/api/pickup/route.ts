@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { historianData } from '@/lib/historians';
-import { openRouterChat } from '@/lib/openrouter';
+import { chatWithAI } from '@/lib/openrouter';
 
 // Rate limiting
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
-const RATE_LIMIT = 50; // 50 requests per minute
+const RATE_LIMIT = 10;
 const WINDOW = 60000;
 
-// Security patterns only (keep it minimal for performance)
+// Security patterns
 const BLOCKED_PATTERNS = [
-  /<script/i, /javascript:/i, /on\w+\s*=/i, /eval\s*\(/i,
+  /eval\s*\(/i, /<script/i, /javascript:/i, /on\w+\s*=/i,
 ];
 
 function checkRateLimit(ip: string): boolean {
@@ -25,44 +25,43 @@ function checkRateLimit(ip: string): boolean {
 }
 
 function validateInput(input: string): { valid: boolean; reason?: string } {
-  if (input.length < 2) return { valid: false, reason: 'Too short (min 2 chars)' };
-  if (input.length > 300) return { valid: false, reason: 'Too long (max 300 chars)' };
-  
+  if (input.length < 2) return { valid: false, reason: 'Too short' };
+  if (input.length > 300) return { valid: false, reason: 'Too long' };
   for (const pattern of BLOCKED_PATTERNS) {
     if (pattern.test(input)) return { valid: false, reason: 'Invalid characters' };
   }
   return { valid: true };
 }
 
-// Fallback responses
-const fallbacks: Record<string, { roast: string; flirt: string }> = {
+// Fallback responses when AI fails
+const fallbackResponses: Record<string, { roast: string; flirt: string }> = {
   'Satoshi Nakamoto': {
-    roast: "Your pickup line is as traceable as my identity.",
-    flirt: "You found something rarer than my Bitcoin - my attention."
+    roast: "Your pickup line is as traceable as my identity. Nice try, but I'm unfindable and you're unforgettable... for the wrong reasons.",
+    flirt: "You've found the one thing rarer than my Bitcoin - my attention. Perhaps you're worthy of the genesis block."
   },
   'Vitalik Buterin': {
-    roast: "I've calculated 47 proofs why this won't work.",
-    flirt: "Our chemistry is more stable than Ethereum 2.0 staking."
+    roast: "I've calculated 47 proofs why this won't work. Your game has more bugs than Solidity 0.4.0.",
+    flirt: "Our chemistry is more stable than Ethereum 2.0 staking. Let me shard my heart with you."
   },
   'Cleopatra': {
-    roast: "You bring less value than dust under my chariot.",
-    flirt: "I've conquered Egypt, but you've conquered my heart."
+    roast: "You bring less value than the dust under my chariot. I had Roman EMPERORS fighting over me, and you offer... THIS?",
+    flirt: "I've conquered the Nile, but you've conquered my heart. Let me show you my chambers."
   },
   'Do Kwon': {
-    roast: "Your line has stability of my LUNA after depeg.",
-    flirt: "Let's go to moon together - this time no crash!"
+    roast: "Your line has the same stability as my stablecoin - ZERO. I've seen better in worthless rugpulls.",
+    flirt: "Let's go to the moon together - this time we won't crash!"
   },
   'CZ (Changpeng Zhao)': {
-    roast: "Your line was delisted due to lack of liquidity.",
-    flirt: "You're the BNB to my Binance - essential and burning."
+    roast: "Your line was delisted due to lack of liquidity. Funds SAFU, but your game is NOT.",
+    flirt: "You're the BNB to my Binance - essential and burning bright. Let's trade hearts."
   },
   'Sam Bankman-Fried': {
-    roast: "Your line worth more than my FTT token... says nothing.",
-    flirt: "My heart open for deposits. Visit for unlimited withdrawals!"
+    roast: "Your line is worth more than my FTT token... which says nothing. I'm in prison with better options.",
+    flirt: "My heart is open for deposits. Visit me for unlimited withdrawals!"
   },
   'Elon Musk': {
     roast: "Less valuable than my tweets. Even my AI thinks you're basic.",
-    flirt: "Want to see my rocket? It's reusable for you."
+    flirt: "Want to see my rocket? It's reusable like my heart for you."
   },
   'Charles Hoskinson': {
     roast: "Needs 5 years peer review.",
@@ -73,7 +72,7 @@ const fallbacks: Record<string, { roast: string; flirt: string }> = {
     flirt: "Shall I compare thee to a summer's day?"
   },
   'Albert Einstein': {
-    roast: "Your approach slower than light in black hole.",
+    roast: "Your approach slower than light in a black hole.",
     flirt: "Time dilates when I'm with you."
   },
   'Catherine the Great': {
@@ -82,7 +81,7 @@ const fallbacks: Record<string, { roast: string; flirt: string }> = {
   },
   'Leonardo da Vinci': {
     roast: "Your proportions all wrong!",
-    flirt: "You have smile of my Mona Lisa."
+    flirt: "You have the smile of my Mona Lisa."
   }
 };
 
@@ -97,56 +96,67 @@ export async function POST(request: NextRequest) {
 
     // Find historian
     const match = historianId.match(/historian-(\d+)|static-(\d+)/);
-    const historianIndex = match ? parseInt(match[1] || match[2], 10) : -1;
+    if (!match) {
+      return NextResponse.json({ error: 'Invalid historianId' }, { status: 400 });
+    }
     
-    if (historianIndex === -1 || historianIndex >= historianData.length) {
+    const historianIndex = parseInt(match[1] || match[2], 10);
+    if (historianIndex < 0 || historianIndex >= historianData.length) {
       return NextResponse.json({ error: 'Historian not found' }, { status: 404 });
     }
 
     const historian = historianData[historianIndex];
-    
+
     // Validate input
     const validation = validateInput(pickupLine);
     if (!validation.valid) {
       return NextResponse.json({ error: validation.reason }, { status: 400 });
     }
 
-    // Rate limiting
+    // Rate limit
     const ip = request.headers.get('x-forwarded-for') || 'unknown';
     if (!checkRateLimit(ip)) {
-      return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
+      return NextResponse.json({ error: 'Rate limit. Slow down!' }, { status: 429 });
     }
 
     // 70% roast, 30% flirt
     const isRoast = Math.random() < 0.7;
-    
-    // Try OpenRouter AI first (FREE MiniMax 2.5 or Nvidia Nemotron 3)
-    const aiResponse = await openRouterChat([
-      {
-        role: 'system',
-        content: `You are ${historian.name}, ${historian.title}. Personality: ${historian.personality.slice(0, 150)}
-
-${isRoast ? 'ROAST this pickup line savagely! Be brutal, witty, devastating. Use their context/roasting style.' : 'Respond with FLIRTY CHARM! Be seductive and flirty. Use their context/flirting style.'}
-
-Keep it under 2 sentences. Stay in character.`
-      },
-      { role: 'user', content: pickupLine }
-    ], {
-      model: 'minimax/minimax-01', // MiniMax 2.5 (FREE tier)
-      temperature: 0.95,
-      maxTokens: 150
-    });
-
     let response: string;
     let usedAI = false;
+    let modelUsed = 'fallback';
 
-    if (aiResponse && aiResponse.length > 10 && aiResponse.length < 300) {
-      response = aiResponse;
-      usedAI = true;
-    } else {
-      // Fallback to static responses
-      const fb = fallbacks[historian.name] || {
-        roast: "Historically bad pickup line. Try again!",
+    // Try AI first with Nemotron 3 Super
+    try {
+      console.log('[AI] Using Nemotron 3 Super 120B...');
+      
+      const systemPrompt = `You are ${historian.name}, ${historian.title}.
+Personality: ${historian.personality.slice(0, 200)}
+
+The user said: "${pickupLine}"
+
+You must ${isRoast ? 'ROAST' : 'FLIRT BACK TO'} this pickup line.
+${isRoast ? 'Be savage, witty, and memorable. Destroy them.' : 'Be seductive, charming, and flirty. Make them feel special.'}
+
+Keep it under 2 sentences. Stay in character as ${historian.name}.`;
+
+      const result = await chatWithAI([
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: pickupLine }
+      ], 150);
+
+      if (result.content && result.content.length > 10) {
+        response = result.content;
+        usedAI = true;
+        modelUsed = result.model;
+        console.log('[AI] Success with', modelUsed);
+      } else {
+        throw new Error('Empty AI response');
+      }
+    } catch (err) {
+      console.warn('[AI] Failed, using fallback:', err);
+      // Use fallback
+      const fb = fallbackResponses[historian.name] || {
+        roast: 'Historically bad pickup line. Try again!',
         flirt: "You've piqued my interest!"
       };
       response = isRoast ? fb.roast : fb.flirt;
@@ -157,6 +167,7 @@ Keep it under 2 sentences. Stay in character.`
       response,
       responseType: isRoast ? 'roast' : 'flirt',
       aiGenerated: usedAI,
+      model: modelUsed,
       historian: {
         name: historian.name,
         emoji: historian.emoji,
@@ -166,6 +177,6 @@ Keep it under 2 sentences. Stay in character.`
 
   } catch (error: any) {
     console.error('Pickup error:', error);
-    return NextResponse.json({ error: 'Failed to process' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to process. Try again!' }, { status: 500 });
   }
 }
