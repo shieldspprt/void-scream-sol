@@ -12,20 +12,18 @@ interface Props {
   children: ReactNode;
 }
 
-// Mainnet RPC endpoints with fallbacks
-const MAINNET_ENDPOINTS = [
+// Helius RPC - primary endpoint (requires API key for production)
+const HELIUS_RPC = process.env.NEXT_PUBLIC_HELIUS_RPC || 'https://mainnet.helius-rpc.com/?api-key=YOUR_API_KEY';
+
+// Fallback RPC endpoints (public, lower rate limits)
+const FALLBACK_RPCS = [
   'https://api.mainnet-beta.solana.com',
   'https://solana-api.projectserum.com',
-  'https://rpc.ankr.com/solana',
-  'https://solana-mainnet.rpc.extrnode.com',
 ];
 
 export const WalletProvider: FC<Props> = ({ children }) => {
-  // Use mainnet by default
-  const endpoint = useMemo(() => {
-    // Check for custom RPC in env, otherwise use public mainnet
-    return process.env.NEXT_PUBLIC_SOLANA_RPC || MAINNET_ENDPOINTS[0];
-  }, []);
+  // Use Helius as primary, with explicit commitment
+  const endpoint = useMemo(() => HELIUS_RPC, []);
 
   // Configure supported wallets
   const wallets = useMemo(
@@ -37,7 +35,13 @@ export const WalletProvider: FC<Props> = ({ children }) => {
   );
 
   return (
-    <ConnectionProvider endpoint={endpoint}>
+    <ConnectionProvider 
+      endpoint={endpoint}
+      config={{ 
+        commitment: 'confirmed',
+        wsEndpoint: undefined // Disable websocket to avoid issues
+      }}
+    >
       <SolanaWalletProvider wallets={wallets} autoConnect>
         <WalletModalProvider>
           {children}

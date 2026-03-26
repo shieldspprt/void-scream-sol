@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useWallet } from '@solana/wallet-adapter-react';
+import { useWallet, useConnection } from '@solana/wallet-adapter-react';
 import { 
   Heart, 
   Sparkles, 
@@ -57,6 +57,7 @@ const FREE_ATTEMPTS = 3;
 
 export default function Home() {
   const { publicKey, connected, signTransaction } = useWallet();
+  const { connection } = useConnection();
   const [historians, setHistorians] = useState<Historian[]>([]);
   const [selectedHistorian, setSelectedHistorian] = useState<Historian | null>(null);
   const [pickupLine, setPickupLine] = useState('');
@@ -137,7 +138,7 @@ export default function Home() {
   };
 
   const handlePayment = async () => {
-    if (!publicKey || !connected) {
+    if (!publicKey || !connected || !signTransaction) {
       toast.error('Please connect your wallet first');
       return;
     }
@@ -151,25 +152,36 @@ export default function Home() {
     
     try {
       // Dynamic import for Solana
-      const { Connection, Transaction, SystemProgram, LAMPORTS_PER_SOL, PublicKey } = await import('@solana/web3.js');
+      const { 
+        Transaction, 
+        SystemProgram, 
+        ComputeBudgetProgram,
+        LAMPORTS_PER_SOL, 
+        PublicKey 
+      } = await import('@solana/web3.js');
       
-      // Connect to Solana (mainnet for production)
-      const connection = new Connection('https://api.mainnet-beta.solana.com', 'confirmed');
-      
-      // Get latest blockhash with commitment
+      // Get fresh blockhash with short expiry for speed
       const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed');
       
-      // Create transaction
+      // Create transaction with recent blockhash
       const transaction = new Transaction({
-        recentBlockhash: blockhash,
         feePayer: publicKey,
+        recentBlockhash: blockhash,
       });
 
-      // Treasury wallet - fee collection address
+      // Treasury wallet - DD's wallet for fee collection
       const treasuryAddress = new PublicKey('DD4AdYKVcV6kgpmiCEeASRmJyRdKgmaRAbsjKucx8CvY');
       
-      // Convert SOL to lamports
+      // Convert SOL to lamports - 0.001 SOL
       const lamports = Math.floor(PRICE_SOL * LAMPORTS_PER_SOL);
+
+      // Add priority fee instruction for faster confirmation
+      // 5000 micro-lamports = 0.000005 SOL priority fee
+      transaction.add(
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: 5000,
+        })
+      );
 
       // Add transfer instruction
       transaction.add(
@@ -181,32 +193,45 @@ export default function Home() {
       );
 
       // Sign transaction using wallet adapter
-      if (!signTransaction) {
-        throw new Error('Wallet does not support signing');
-      }
-
       const signed = await signTransaction(transaction);
-      const signature = await connection.sendRawTransaction(signed.serialize());
       
-      // Confirm transaction
+      // Send transaction with skipPreflight for speed
+      const signature = await connection.sendRawTransaction(signed.serialize(), {
+        skipPreflight: false, // Keep preflight for safety
+        preflightCommitment: 'confirmed',
+      });
+      
+      toast.loading('Confirming transaction...', { id: 'tx-confirm' });
+      
+      // Confirm transaction with timeout
       await connection.confirmTransaction({
         signature,
         blockhash,
         lastValidBlockHeight,
       }, 'confirmed');
 
+      toast.dismiss('tx-confirm');
       setTxSignature(signature);
-      toast.success('Payment successful!');
+      toast.success('Payment confirmed!');
       
-      // Now get the response
+      // Get AI response
       await getResponse(signature);
 
     } catch (error: any) {
-      console.error('Payment error:', error);
-      if (error.message?.includes('User rejected')) {
+      toast.dismiss('tx-confirm');
+      console.error('❌ Payment error:', error);
+      
+      // Better error messages
+      if (error.message?.includes('Blockhash not found')) {
+        toast.error('Network busy. Please try again.');
+      } else if (error.message?.includes('insufficient funds')) {
+        toast.error('Insufficient SOL balance for transaction.');
+      } else if (error.message?.includes('User rejected')) {
         toast.error('Transaction cancelled');
+      } else if (error.message?.includes('429') || error.message?.includes('rate limit')) {
+        toast.error('RPC rate limit hit. Try again in a moment.');
       } else {
-        toast.error('Payment failed: ' + (error.message || 'Unknown error'));
+        toast.error('Payment failed: ' + (error.message?.slice(0, 50) || 'Unknown error'));
       }
     }
     setIsProcessingPayment(false);
