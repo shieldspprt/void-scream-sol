@@ -1,7 +1,19 @@
 {
-  "name": "nextjs_tailwind_shadcn_ts",
-  "version": "0.2.0",
+  "name": "yellex",
+  "version": "1.0.0",
+  "description": "Yellex - Flirt with History's Greatest Minds. AI-powered pickup line game with Solana legends and historical figures.",
   "private": true,
+  "keywords": ["yellex", "pickup-lines", "solana", "crypto", "ai", "dating-game", "satoshi", "vitalik", "cleopatra", "web3", "meme"],
+  "license": "MIT",
+  "author": "AI Agent",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shieldspprt/void-scream-sol"
+  },
+  "homepage": "https://yellex.fun",
+  "bugs": {
+    "url": "https://github.com/shieldspprt/void-scream-sol/issues"
+  },
   "scripts": {
     "dev": "next dev -p 3000 2>&1 | tee dev.log",
     "build": "next build",
